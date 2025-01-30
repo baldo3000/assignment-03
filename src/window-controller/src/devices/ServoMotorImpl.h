@@ -4,8 +4,8 @@
 #include "ServoMotor.h"
 #include "utilities/ServoTimer2.h"
 
-#define MIN 544.0
-#define MAX 2400.0
+#define MIN 750.0  // 544.0
+#define MAX 2250.0 // 2400.0
 
 class ServoMotorImpl : public ServoMotor
 {

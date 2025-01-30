@@ -14,17 +14,17 @@ private:
         MANUAL
     } state;
 
+    long stateTimestamp;
+    bool justEntered;
+    int currentAperture;
+
+    UserConsole *pUserConsole;
     ServoMotorImpl *pWindow;
 
     void setState(State state);
     long elapsedTimeInState();
     bool doOnce();
-    bool checkWindowMsg();
-
-    long stateTimestamp;
-    bool justEntered;
-
-    UserConsole *pUserConsole;
+    void checkMsg();
 
 public:
     WorkflowTask(UserConsole *pUserConsole);
