@@ -55,6 +55,7 @@ void WorkflowTask::tick()
             Logger.log(String(LOG_TAG) + "AUTOMATIC");
             setState(AUTOMATIC);
         }
+        Logger.log(String(LOG_TAG) + this->pUserConsole->getPotValue());
         break;
     }
 }

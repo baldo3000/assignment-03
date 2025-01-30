@@ -3,6 +3,7 @@
 
 #include "config.h"
 #include "devices/ButtonImpl.h"
+#include "devices/PotImpl.h"
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 
@@ -10,6 +11,7 @@ class UserConsole
 {
 private:
     ButtonImpl *pChangeModeButton;
+    PotImpl *pPot;
     LiquidCrystal_I2C *pLcd;
 
 public:
@@ -21,6 +23,7 @@ public:
     void turnOnDisplay();
 
     bool changeModeSignal();
+    int getPotValue();
 
     void displayWelcome();
 };

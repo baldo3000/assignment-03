@@ -1,12 +1,12 @@
 #include "UserConsole.h"
 #include <Arduino.h>
-#include "devices/ButtonImpl.h"
 #include "config.h"
 
 UserConsole::UserConsole()
 {
     this->pLcd = new LiquidCrystal_I2C(0x27, 20, 4);
     this->pChangeModeButton = new ButtonImpl(MODE_BUTTON_PIN);
+    this->pPot = new PotImpl(POT_PIN);
 }
 
 void UserConsole::turnOnDisplay()
@@ -31,6 +31,11 @@ bool UserConsole::changeModeSignal()
 {
     this->pChangeModeButton->sync();
     return this->pChangeModeButton->isPressed();
+}
+
+int UserConsole::getPotValue()
+{
+    return this->pPot->getValue();
 }
 
 void UserConsole::displayWelcome()
