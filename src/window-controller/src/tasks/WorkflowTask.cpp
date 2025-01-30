@@ -3,13 +3,13 @@
 #include "kernel/MsgService.h"
 #include "config.h"
 #include <Arduino.h>
-#include <avr/sleep.h>
-#include <EnableInterrupt.h>
 
 #define LOG_TAG "[WF] "
+#define CHANGE_MODE_TIMEOUT 250L
 
 WorkflowTask::WorkflowTask(UserConsole *pUserConsole) : pUserConsole(pUserConsole)
 {
+    this->pWindow = new ServoMotorImpl(WINDOW_MOTOR_PIN);
     setState(AUTOMATIC);
 }
 
@@ -42,10 +42,19 @@ void WorkflowTask::tick()
     switch (this->state)
     {
     case AUTOMATIC:
-        checkWindowMsg();
+        if (this->pUserConsole->changeModeSignal() && this->elapsedTimeInState() > CHANGE_MODE_TIMEOUT)
+        {
+            Logger.log(String(LOG_TAG) + "MANUAL");
+            setState(MANUAL);
+        }
         break;
 
     case MANUAL:
+        if (this->pUserConsole->changeModeSignal() && this->elapsedTimeInState() > CHANGE_MODE_TIMEOUT)
+        {
+            Logger.log(String(LOG_TAG) + "AUTOMATIC");
+            setState(AUTOMATIC);
+        }
         break;
     }
 }
@@ -58,14 +67,15 @@ bool WorkflowTask::checkWindowMsg()
         Msg *msg = MsgService.receiveMsg();
         if (msg != NULL)
         {
-            Logger.log(msg->getContent());
-            if (msg->getContent() == "level")
+            String content = msg->getContent();
+            content.trim();
+            // Logger.log(content);
+            if (content == "level")
             {
                 level = true;
             }
             delete msg;
         }
     }
-    Logger.log(String(level));
     return level;
 }

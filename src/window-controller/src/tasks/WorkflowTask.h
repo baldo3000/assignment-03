@@ -3,6 +3,7 @@
 
 #include "kernel/Task.h"
 #include "model/UserConsole.h"
+#include "devices/ServoMotorImpl.h"
 
 class WorkflowTask : public Task
 {
@@ -12,6 +13,8 @@ private:
         AUTOMATIC,
         MANUAL
     } state;
+
+    ServoMotorImpl *pWindow;
 
     void setState(State state);
     long elapsedTimeInState();
