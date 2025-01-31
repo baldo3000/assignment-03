@@ -17,6 +17,7 @@ private:
     long stateTimestamp;
     bool justEntered;
     int currentAperture;
+    double reportedTemperature;
 
     UserConsole *pUserConsole;
     ServoMotorImpl *pWindow;

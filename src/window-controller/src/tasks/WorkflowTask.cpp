@@ -13,6 +13,7 @@ WorkflowTask::WorkflowTask(UserConsole *pUserConsole) : pUserConsole(pUserConsol
     this->pWindow = new ServoMotorImpl(WINDOW_MOTOR_PIN);
     this->pWindow->on();
     this->currentAperture = 0;
+    this->reportedTemperature = 0.0;
     setState(AUTOMATIC);
     // this->pUserConsole->displayWelcome();
 }
@@ -75,9 +76,13 @@ void WorkflowTask::tick()
     this->pUserConsole->displayAperture(this->currentAperture);
 }
 
-bool isNumeric(String string)
+bool isNumeric(const String string)
 {
     bool numeric = true;
+    if (string == "")
+    {
+        numeric = false;
+    }
     for (unsigned int i = 0; i < string.length(); i++)
     {
         if (!isDigit(string.charAt(i)) && string.charAt(i) != '.')
@@ -98,23 +103,43 @@ void WorkflowTask::checkMsg()
             String content = msg->getContent();
             content.trim();
             // Logger.log(content);
-            if (content == "manual" && this->state == AUTOMATIC)
+            char contentCopy[content.length()];
+            strcpy(contentCopy, content.c_str());
+
+            String mode = strtok(contentCopy, ";");
+            String aperture = strtok(NULL, ";");
+            String temperature = strtok(NULL, ";");
+
+            // Change mode checks
+            if (this->state == AUTOMATIC && mode == "M")
             {
                 setState(MANUAL);
             }
-            else if (content == "automatic" && this->state == MANUAL)
+            else if (this->state == MANUAL && mode == "A")
             {
                 setState(AUTOMATIC);
             }
-            else if (this->state == AUTOMATIC && isNumeric(content))
+
+            // Set values checks
+            if (this->state == AUTOMATIC && isNumeric(aperture))
             {
-                const int aperture = content.toInt();
+                const int apertureInt = aperture.toInt();
                 // Logger.log("aperture: " + String(aperture));
-                if (aperture >= 0 && aperture <= 100)
+                if (apertureInt >= 0 && apertureInt <= 100)
                 {
-                    this->currentAperture = aperture;
+                    this->currentAperture = apertureInt;
                 }
             }
+            else if (this->state == MANUAL && isNumeric(temperature))
+            {
+                if (isNumeric(temperature))
+                {
+                    const int temperatureDouble = temperature.toDouble();
+                    // Logger.log("temperature: " + String(temperatureDouble));
+                    this->reportedTemperature = temperatureDouble;
+                }
+            }
+
             delete msg;
         }
     }
