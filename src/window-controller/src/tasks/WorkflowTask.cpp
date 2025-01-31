@@ -56,6 +56,7 @@ void WorkflowTask::tick()
             setState(MANUAL);
         }
         this->pWindow->setPosition(this->currentAperture);
+        this->pUserConsole->displayAperture(this->currentAperture);
         break;
 
     case MANUAL:
@@ -71,9 +72,10 @@ void WorkflowTask::tick()
         this->currentAperture = this->pUserConsole->getPotValue();
         const int angle = map(this->currentAperture, 0, 100, 0, WINDOW_MAX_APERTURE_ANGLE);
         this->pWindow->setPosition(angle);
+        this->pUserConsole->displayAperture(this->currentAperture);
+        this->pUserConsole->displayTemperature(this->reportedTemperature);
         break;
     }
-    this->pUserConsole->displayAperture(this->currentAperture);
 }
 
 bool isNumeric(const String string)
@@ -134,7 +136,7 @@ void WorkflowTask::checkMsg()
             {
                 if (isNumeric(temperature))
                 {
-                    const int temperatureDouble = temperature.toDouble();
+                    const double temperatureDouble = temperature.toDouble();
                     // Logger.log("temperature: " + String(temperatureDouble));
                     this->reportedTemperature = temperatureDouble;
                 }

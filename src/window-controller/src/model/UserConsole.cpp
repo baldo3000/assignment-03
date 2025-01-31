@@ -49,6 +49,8 @@ void UserConsole::displayModeAutomatic()
 {
     this->pLcd->setCursor(19, 0);
     this->pLcd->print("A");
+    this->pLcd->setCursor(0, 3);
+    this->pLcd->print("                    ");
 }
 
 void UserConsole::displayModeManual()
@@ -59,8 +61,12 @@ void UserConsole::displayModeManual()
 
 void UserConsole::displayAperture(const int aperture)
 {
-    this->pLcd->setCursor(12, 1);
-    this->pLcd->print("  ");
     this->pLcd->setCursor(0, 1);
     this->pLcd->print("Aperture: " + String(aperture) + "%");
+}
+
+void UserConsole::displayTemperature(const double temperature)
+{
+    this->pLcd->setCursor(0, 3);
+    this->pLcd->print("Temperature: " + String(temperature) + "C");
 }

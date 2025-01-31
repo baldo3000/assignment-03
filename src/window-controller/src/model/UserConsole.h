@@ -27,7 +27,7 @@ public:
 
     void displayWelcome();
     void displayAperture(int aperture);
-    void displayTemperature();
+    void displayTemperature(double temperature);
     void displayModeAutomatic();
     void displayModeManual();
 };
