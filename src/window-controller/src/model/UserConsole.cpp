@@ -41,6 +41,26 @@ int UserConsole::getPotValue()
 void UserConsole::displayWelcome()
 {
     this->pLcd->clear();
-    this->pLcd->setCursor(0, 0);
+    this->pLcd->setCursor(6, 1);
     this->pLcd->print("WELCOME");
+}
+
+void UserConsole::displayModeAutomatic()
+{
+    this->pLcd->setCursor(19, 0);
+    this->pLcd->print("A");
+}
+
+void UserConsole::displayModeManual()
+{
+    this->pLcd->setCursor(19, 0);
+    this->pLcd->print("M");
+}
+
+void UserConsole::displayAperture(const int aperture)
+{
+    this->pLcd->setCursor(12, 1);
+    this->pLcd->print("  ");
+    this->pLcd->setCursor(0, 1);
+    this->pLcd->print("Aperture: " + String(aperture) + "%");
 }

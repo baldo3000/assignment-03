@@ -26,6 +26,10 @@ public:
     int getPotValue();
 
     void displayWelcome();
+    void displayAperture(int aperture);
+    void displayTemperature();
+    void displayModeAutomatic();
+    void displayModeManual();
 };
 
 #endif

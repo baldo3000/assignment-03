@@ -14,6 +14,7 @@ WorkflowTask::WorkflowTask(UserConsole *pUserConsole) : pUserConsole(pUserConsol
     this->pWindow->on();
     this->currentAperture = 0;
     setState(AUTOMATIC);
+    // this->pUserConsole->displayWelcome();
 }
 
 void WorkflowTask::setState(const State state)
@@ -47,6 +48,7 @@ void WorkflowTask::tick()
         if (doOnce())
         {
             Logger.log(String(LOG_TAG) + "AUTOMATIC");
+            this->pUserConsole->displayModeAutomatic();
         }
         if (this->pUserConsole->changeModeSignal() && this->elapsedTimeInState() > CHANGE_MODE_TIMEOUT)
         {
@@ -59,6 +61,7 @@ void WorkflowTask::tick()
         if (doOnce())
         {
             Logger.log(String(LOG_TAG) + "MANUAL");
+            this->pUserConsole->displayModeManual();
         }
         if (this->pUserConsole->changeModeSignal() && this->elapsedTimeInState() > CHANGE_MODE_TIMEOUT)
         {
@@ -69,6 +72,7 @@ void WorkflowTask::tick()
         this->pWindow->setPosition(angle);
         break;
     }
+    this->pUserConsole->displayAperture(this->currentAperture);
 }
 
 bool isNumeric(String string)
@@ -106,7 +110,7 @@ void WorkflowTask::checkMsg()
             {
                 const int aperture = content.toInt();
                 // Logger.log("aperture: " + String(aperture));
-                if (aperture >= 0 && aperture <= WINDOW_MAX_APERTURE_ANGLE)
+                if (aperture >= 0 && aperture <= 100)
                 {
                     this->currentAperture = aperture;
                 }
