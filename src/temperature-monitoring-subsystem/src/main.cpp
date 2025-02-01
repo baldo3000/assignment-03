@@ -3,20 +3,12 @@
 #include "Connection.h"
 #define MSG_BUFFER_SIZE 50
 
-/* Wifi network info */
-const char *ssid = "Casa Baldazzi";
-const char *password = "casakikina2020";
-
-/* MQTT connection info */
-const char *mqtt_server = "broker.mqtt-dashboard.com";
-const char *topic = "baldo-assignment03";
-
 void callback(char *topic, byte *payload, unsigned int length)
 {
   Serial.println(String("Message arrived on [") + topic + "] len: " + length);
 }
 
-Connection connection(ssid, password, mqtt_server, topic, callback);
+Connection connection(WIFI_SSID, WIFI_PASSWORD, MQTT_SERVER, TOPIC, callback);
 
 unsigned long lastMsgTime = 0;
 char msg[MSG_BUFFER_SIZE];
