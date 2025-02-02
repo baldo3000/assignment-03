@@ -55,17 +55,14 @@ void Connection::reconnect()
     {
         Serial.print("Attempting MQTT connection...");
 
-        // Create a random client ID
-        const String clientId = String("baldo3000-client-") + String(random(0xffff), HEX);
+        // const String clientId = String("baldo3000-client-") + String(random(0xffff), HEX);
+        const String clientId = "baldo3000-esp32";
 
         // Attempt to connect
-        if (this->client.connect(clientId.c_str()))
+        if (this->client.connect(clientId.c_str(), this->topic, 1, true, "Temperature monitoring subsystem disconnected"))
         {
             Serial.println("connected");
-            // Once connected, publish an announcement...
-            // client.publish("outTopic", "hello world");
-            // ... and resubscribe
-            this->client.subscribe(this->topic);
+            this->client.subscribe(this->topic, 1);
         }
         else
         {

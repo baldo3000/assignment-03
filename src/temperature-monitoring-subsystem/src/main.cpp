@@ -47,7 +47,7 @@ void loop()
         const float temperature = monitoringSystem.getTemperature();
         // snprintf(msg, MSG_BUFFER_SIZE, "%f\0", temperature);
         Serial.println("Publishing: " + String(temperature));
-        connection.publish(String(temperature).c_str());
+        connection.publish(("ts:" + String(temperature)).c_str());
       }
     }
     break;
@@ -63,6 +63,23 @@ void loop()
   }
 }
 
+bool isNumeric(const String string)
+{
+  bool numeric = true;
+  if (string == "")
+  {
+    numeric = false;
+  }
+  for (unsigned int i = 0; i < string.length(); i++)
+  {
+    if (!isDigit(string.charAt(i)) && string.charAt(i) != '.')
+    {
+      numeric = false;
+    }
+  }
+  return numeric;
+}
+
 void callback(char *topic, byte *payload, unsigned int length)
 {
   // Ensure the payload is null-terminated
@@ -71,4 +88,15 @@ void callback(char *topic, byte *payload, unsigned int length)
   message[length] = '\0';
 
   Serial.println(String("Message arrived on [") + topic + "] len: " + length + ", message: " + String(message));
+
+  // Detect if the message comes from Control Unit (CU)
+  if (strncmp(message, "cu:", 3) == 0)
+  {
+    const String content = String(message).substring(3);
+    if (isNumeric(content))
+    {
+      samplingPeriod = content.toInt();
+      Serial.println("Sampling period changed to: " + String(samplingPeriod));
+    }
+  }
 }
