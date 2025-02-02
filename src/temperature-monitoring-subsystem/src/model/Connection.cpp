@@ -4,7 +4,7 @@
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-Connection::Connection(const char *ssid, const char *password, const char *mqtt_server, const char *topic, std::function<void(char *, uint8_t *, unsigned int)> callback)
+Connection::Connection(const char *ssid, const char *password, const char *mqtt_server, const char *topic, std::function<void(char *, byte *, unsigned int)> callback)
     : ssid(ssid), password(password), mqtt_server(mqtt_server), topic(topic), callback(callback), client(this->espClient)
 {
 }

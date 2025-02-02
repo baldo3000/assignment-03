@@ -21,7 +21,7 @@ private:
     void setup_mqtt();
 
 public:
-    Connection(const char *ssid, const char *password, const char *mqtt_server, const char *topic, std::function<void(char *, uint8_t *, unsigned int)> callback);
+    Connection(const char *ssid, const char *password, const char *mqtt_server, const char *topic, std::function<void(char *, byte *, unsigned int)> callback);
     void init();
     bool loop();
     bool isConnected();

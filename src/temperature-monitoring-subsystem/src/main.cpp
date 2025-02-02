@@ -1,46 +1,74 @@
 #include <Arduino.h>
 #include "config.h"
-#include "Connection.h"
+#include "model/Connection.h"
+#include "model/System.h"
 #define MSG_BUFFER_SIZE 50
 
-void callback(char *topic, byte *payload, unsigned int length)
-{
-  Serial.println(String("Message arrived on [") + topic + "] len: " + length);
-}
-
+void callback(char *topic, byte *payload, unsigned int length);
 Connection connection(WIFI_SSID, WIFI_PASSWORD, MQTT_SERVER, TOPIC, callback);
+System monitoringSystem;
 
-unsigned long lastMsgTime = 0;
+enum State
+{
+  CONNECTED,
+  NETWORK_PROBLEM
+} state;
+
 char msg[MSG_BUFFER_SIZE];
-int value = 0;
+unsigned long samplingPeriod;
+unsigned long lastSampleTime;
 
 void setup()
 {
   Serial.begin(115200);
-  connection.init();
   randomSeed(micros());
+  connection.init();
+  state = NETWORK_PROBLEM; // The system always start not connected
+  samplingPeriod = 2000;   // 2 seconds
+  lastSampleTime = 0;
 }
 
 void loop()
 {
-  if (!connection.isConnected())
+  switch (state)
   {
+  case CONNECTED:
+    if (!connection.isConnected())
+    {
+      state = NETWORK_PROBLEM;
+      monitoringSystem.problem();
+    }
+    else
+    {
+      connection.loop();
+      if (millis() - lastSampleTime > samplingPeriod)
+      {
+        lastSampleTime = millis();
+        const float temperature = monitoringSystem.getTemperature();
+        // snprintf(msg, MSG_BUFFER_SIZE, "%f\0", temperature);
+        Serial.println("Publishing: " + String(temperature));
+        connection.publish(String(temperature).c_str());
+      }
+    }
+    break;
+
+  case NETWORK_PROBLEM:
     connection.reconnect();
+    if (connection.isConnected())
+    {
+      state = CONNECTED;
+      monitoringSystem.ok();
+    }
+    break;
   }
-  connection.loop();
+}
 
-  unsigned long now = millis();
-  if (now - lastMsgTime > 10000)
-  {
-    lastMsgTime = now;
-    value++;
+void callback(char *topic, byte *payload, unsigned int length)
+{
+  // Ensure the payload is null-terminated
+  char message[length + 1];
+  memcpy(message, payload, length);
+  message[length] = '\0';
 
-    /* creating a msg in the buffer */
-    snprintf(msg, MSG_BUFFER_SIZE, "hello world #%ld", value);
-
-    Serial.println(String("Publishing message: ") + msg);
-
-    /* publishing the msg */
-    connection.publish(msg);
-  }
+  Serial.println(String("Message arrived on [") + topic + "] len: " + length + ", message: " + String(message));
 }
