@@ -1,12 +1,12 @@
 package me.baldo3000;
 
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Vertx;
+import me.baldo3000.engine.api.Engine;
+import me.baldo3000.engine.impl.EngineImpl;
 
 public class ControlUnitBackend {
     public static void main(String[] args) {
-        Vertx vertx = Vertx.vertx();
-        MQTTAgent agent = new MQTTAgent();
-        vertx.deployVerticle(agent);
+        final Engine engine = new EngineImpl();
+        engine.initialize();
+        engine.mainLoop();
     }
 }

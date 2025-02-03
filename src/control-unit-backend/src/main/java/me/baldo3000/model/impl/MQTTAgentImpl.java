@@ -1,19 +1,19 @@
-package me.baldo3000;
+package me.baldo3000.model.impl;
 
 import io.netty.handler.codec.mqtt.MqttQoS;
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.mqtt.MqttClient;
+import me.baldo3000.model.api.MQTTAgent;
 
 /*
  * MQTT Agent
  */
-public class MQTTAgent extends AbstractVerticle {
+public class MQTTAgentImpl extends AbstractVerticle implements MQTTAgent {
 
     private static final String BROKER_ADDRESS = "broker.mqtt-dashboard.com";
     private static final String TOPIC_NAME = "baldo-assignment03";
 
-    public MQTTAgent() {
+    public MQTTAgentImpl() {
     }
 
     @Override
@@ -34,7 +34,17 @@ public class MQTTAgent extends AbstractVerticle {
         });
     }
 
-    private void log(String msg) {
+    @Override
+    public String getLatestMessage() {
+        return "";
+    }
+
+    @Override
+    public void publishMessage(final String message) {
+
+    }
+
+    private void log(final String msg) {
         System.out.println("[MQTT AGENT] " + msg);
     }
 }
