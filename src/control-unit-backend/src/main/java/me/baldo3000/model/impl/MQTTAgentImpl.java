@@ -14,14 +14,14 @@ public class MQTTAgentImpl extends AbstractVerticle implements MQTTAgent {
     private static final String BROKER_ADDRESS = "broker.mqtt-dashboard.com";
     private static final String TOPIC_NAME = "baldo-assignment03";
 
-    private final MqttClient client;
+    private MqttClient client;
 
     public MQTTAgentImpl() {
-        this.client = MqttClient.create(this.vertx);
     }
 
     @Override
     public void start() {
+        this.client = MqttClient.create(this.vertx);
         log("connecting...");
         this.client.connect(1883, BROKER_ADDRESS, c -> {
             log("connected");
