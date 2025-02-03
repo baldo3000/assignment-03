@@ -22,21 +22,18 @@ public class MQTTAgentImpl extends AbstractVerticle implements MQTTAgent {
 
         client.connect(1883, BROKER_ADDRESS, c -> {
             log("connected");
-            log("subscribing...\n");
+            log("subscribing...");
             client.publishHandler(s -> {
-                System.out.println("There are new message in topic: " + s.topicName());
-                System.out.println("Content(as string) of the message: " + s.payload().toString());
-                System.out.println("QoS: " + s.qosLevel() + "\n");
+//                System.out.println("There are new message in topic: " + s.topicName());
+//                System.out.println("Content(as string) of the message: " + s.payload().toString());
+//                System.out.println("QoS: " + s.qosLevel() + "\n");
+                vertx.eventBus().send("mqtt-messages", s.payload().toString());
             }).subscribe(TOPIC_NAME, MqttQoS.AT_LEAST_ONCE.value());
+            log("subscribed...\n");
 
-            // log("publishing a msg");
-            // client.publish(TOPIC_NAME, Buffer.buffer("hello"), MqttQoS.AT_LEAST_ONCE, false, true);
+//             log("publishing a msg");
+//             client.publish(TOPIC_NAME, Buffer.buffer("hello"), MqttQoS.AT_LEAST_ONCE, false, true);
         });
-    }
-
-    @Override
-    public String getLatestMessage() {
-        return "";
     }
 
     @Override

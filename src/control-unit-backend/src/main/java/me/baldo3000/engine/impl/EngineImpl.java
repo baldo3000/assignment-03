@@ -13,11 +13,16 @@ public class EngineImpl implements Engine {
     private State state;
     private long stateTimestamp;
     private boolean justEntered;
+    private String latestMQTTMessage;
 
     public EngineImpl() {
         this.vertx = Vertx.vertx();
         this.mqttAgent = new MQTTAgentImpl();
         this.vertx.deployVerticle(this.mqttAgent);
+        vertx.eventBus().consumer("mqtt-messages", message -> {
+            this.latestMQTTMessage = message.body().toString();
+            System.out.println("Received message: " + this.latestMQTTMessage);
+        });
     }
 
     @Override
@@ -27,28 +32,32 @@ public class EngineImpl implements Engine {
 
     @Override
     public void mainLoop() {
-        switch (this.state) {
-            case NORMAL -> {
-                if (doOnce()) {
-                    System.out.println(State.NORMAL);
+        while (true) {
+            // final String latestMessage = this.mqttAgent.getLatestMessage();
+            // System.out.println("Latest message: " + latestMessage);
+            switch (this.state) {
+                case NORMAL -> {
+                    if (doOnce()) {
+                        System.out.println(State.NORMAL);
+                    }
                 }
-            }
-            case HOT -> {
-                if (doOnce()) {
-                    System.out.println(State.HOT);
+                case HOT -> {
+                    if (doOnce()) {
+                        System.out.println(State.HOT);
+                    }
                 }
-            }
-            case TOO_HOT -> {
-                if (doOnce()) {
-                    System.out.println(State.TOO_HOT);
+                case TOO_HOT -> {
+                    if (doOnce()) {
+                        System.out.println(State.TOO_HOT);
+                    }
                 }
-            }
-            case ALARM -> {
-                if (doOnce()) {
-                    System.out.println(State.ALARM);
+                case ALARM -> {
+                    if (doOnce()) {
+                        System.out.println(State.ALARM);
+                    }
                 }
-            }
-            default -> {
+                default -> {
+                }
             }
         }
     }
