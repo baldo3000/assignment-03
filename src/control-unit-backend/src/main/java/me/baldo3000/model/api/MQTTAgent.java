@@ -4,5 +4,4 @@ import io.vertx.core.Verticle;
 
 public interface MQTTAgent extends Verticle {
 
-    void publishMessage(String message);
 }

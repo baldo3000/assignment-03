@@ -3,7 +3,10 @@ package me.baldo3000.engine.api;
 public interface Engine {
 
     public static final double HOT_THRESHOLD = 20.0;
-    public static final double TOO_HOT_THRESHOLD = 30.0;
+    public static final double TOO_HOT_THRESHOLD = 25.0;
+
+    public static final long NORMAL_SAMPLE_INTERVAL = 5000;
+    public static final long HOT_SAMPLE_INTERVAL = 1000;
 
     enum State {
         NORMAL,

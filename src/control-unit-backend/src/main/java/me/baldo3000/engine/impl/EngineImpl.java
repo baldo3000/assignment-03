@@ -23,7 +23,7 @@ public class EngineImpl implements Engine {
     @Override
     public void initialize() {
         this.vertx.deployVerticle(this.mqttAgent);
-        this.vertx.eventBus().consumer("mqtt-messages", message -> {
+        this.vertx.eventBus().consumer("mqtt-incoming-messages", message -> {
             final String payload = message.body().toString();
             System.out.println("Received message: " + payload);
             if (payload.length() >= 3) {
@@ -48,16 +48,29 @@ public class EngineImpl implements Engine {
                 case NORMAL -> {
                     if (doOnce()) {
                         System.out.println(State.NORMAL);
+                        this.vertx.eventBus().send("mqtt-outgoing-messages", "cu:" + NORMAL_SAMPLE_INTERVAL);
+                    }
+                    if (this.latestReportedTemperature >= HOT_THRESHOLD) {
+                        setState(State.HOT);
                     }
                 }
                 case HOT -> {
                     if (doOnce()) {
                         System.out.println(State.HOT);
+                        this.vertx.eventBus().send("mqtt-outgoing-messages", "cu:" + HOT_SAMPLE_INTERVAL);
+                    }
+                    if (this.latestReportedTemperature < HOT_THRESHOLD) {
+                        setState(State.NORMAL);
+                    } else if (this.latestReportedTemperature >= TOO_HOT_THRESHOLD) {
+                        setState(State.TOO_HOT);
                     }
                 }
                 case TOO_HOT -> {
                     if (doOnce()) {
                         System.out.println(State.TOO_HOT);
+                    }
+                    if (this.latestReportedTemperature < TOO_HOT_THRESHOLD) {
+                        setState(State.HOT);
                     }
                 }
                 case ALARM -> {
@@ -67,6 +80,11 @@ public class EngineImpl implements Engine {
                 }
                 default -> {
                 }
+            }
+            try {
+                Thread.sleep(100); // Add a small delay TODO: remove
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
         }
     }
