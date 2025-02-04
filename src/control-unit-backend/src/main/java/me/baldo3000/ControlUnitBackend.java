@@ -1,12 +1,28 @@
 package me.baldo3000;
 
-import me.baldo3000.engine.api.Engine;
-import me.baldo3000.engine.impl.EngineImpl;
+import io.vertx.core.Vertx;
+import me.baldo3000.controller.api.Controller;
+import me.baldo3000.controller.impl.ControllerImpl;
+import me.baldo3000.model.api.SerialCommChannel;
+import me.baldo3000.model.impl.MQTTAgent;
+import me.baldo3000.model.impl.SerialCommChannelImpl;
 
 public class ControlUnitBackend {
     public static void main(String[] args) {
-        final Engine engine = new EngineImpl();
-        engine.initialize();
-        engine.mainLoop();
+        final Vertx vertx = Vertx.vertx();
+        final MQTTAgent mqttAgent = new MQTTAgent();
+        final SerialCommChannel channel;
+        try {
+            channel = new SerialCommChannelImpl();
+            System.out.println("Waiting Arduino for rebooting...");
+            Thread.sleep(4000);
+            System.out.println("Ready.");
+            final Controller controller = new ControllerImpl(vertx, mqttAgent, channel);
+            controller.initialize();
+            controller.mainLoop();
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
     }
 }

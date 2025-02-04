@@ -1,13 +1,13 @@
-package me.baldo3000.engine.api;
+package me.baldo3000.controller.api;
 
 public interface Controller {
 
-    public static final double HOT_THRESHOLD = 20.0;
-    public static final double TOO_HOT_THRESHOLD = 25.0;
-    public static final long ALARM_TRIGGER_TIME = 5000;
+    static final double HOT_THRESHOLD = 20.0;
+    static final double TOO_HOT_THRESHOLD = 25.0;
+    static final long ALARM_TRIGGER_TIME = 5000;
 
-    public static final long NORMAL_SAMPLE_INTERVAL = 3000;
-    public static final long HOT_SAMPLE_INTERVAL = 1000;
+    static final long NORMAL_SAMPLE_INTERVAL = 3000;
+    static final long HOT_SAMPLE_INTERVAL = 1000;
 
     enum State {
         NORMAL, HOT, TOO_HOT, ALARM

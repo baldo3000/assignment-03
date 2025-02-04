@@ -1,25 +1,31 @@
-package me.baldo3000.engine.impl;
+package me.baldo3000.controller.impl;
 
 import io.vertx.core.Vertx;
-import me.baldo3000.engine.api.Controller;
+import me.baldo3000.controller.api.Controller;
+import me.baldo3000.model.api.SerialCommChannel;
 import me.baldo3000.model.impl.MQTTAgent;
+import me.baldo3000.model.impl.SerialCommChannelImpl;
 
 public class ControllerImpl implements Controller {
 
     private final Vertx vertx;
     private final MQTTAgent mqttAgent;
+    private final SerialCommChannel channel;
 
     private State state;
     private long stateTimestamp;
     private boolean justEntered;
     private double latestReportedTemperature;
     private boolean resetSignal;
+    private int windowAperture;
 
-    public ControllerImpl() {
-        this.vertx = Vertx.vertx();
-        this.mqttAgent = new MQTTAgent();
+    public ControllerImpl(final Vertx vertx, final MQTTAgent mqttAgent, final SerialCommChannel channel) {
+        this.vertx = vertx;
+        this.mqttAgent = mqttAgent;
+        this.channel = channel;
         this.latestReportedTemperature = 0.0;
         this.resetSignal = false;
+        this.windowAperture = 0;
     }
 
     @Override
@@ -95,6 +101,12 @@ public class ControllerImpl implements Controller {
                 default -> {
                 }
             }
+
+            // Send message to window controller
+            this.windowAperture = temperatureToWindowAperture(this.latestReportedTemperature);
+            this.channel.sendMsg(this.windowAperture + ";" + this.latestReportedTemperature);
+
+            // Wait a bit
             try {
                 Thread.sleep(100); // Add a small delay TODO: remove
             } catch (InterruptedException e) {
@@ -108,14 +120,6 @@ public class ControllerImpl implements Controller {
 
     }
 
-    private boolean doOnce() {
-        if (this.justEntered) {
-            this.justEntered = false;
-            return true;
-        }
-        return false;
-    }
-
     @Override
     public void setState(final State state) {
         this.state = state;
@@ -126,5 +130,23 @@ public class ControllerImpl implements Controller {
     @Override
     public State getState() {
         return this.state;
+    }
+
+    private boolean doOnce() {
+        if (this.justEntered) {
+            this.justEntered = false;
+            return true;
+        }
+        return false;
+    }
+
+    private int temperatureToWindowAperture(final double temperature) {
+        if (temperature < HOT_THRESHOLD) {
+            return 0;
+        } else if (temperature > TOO_HOT_THRESHOLD) {
+            return 100;
+        } else {
+            return (int) ((temperature - HOT_THRESHOLD) / (TOO_HOT_THRESHOLD - HOT_THRESHOLD) * 100);
+        }
     }
 }

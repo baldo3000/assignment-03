@@ -4,19 +4,18 @@ import io.netty.handler.codec.mqtt.MqttQoS;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.mqtt.MqttClient;
-import me.baldo3000.model.api.MQTTAgent;
 
 /*
  * MQTT Agent
  */
-public class MQTTAgentImpl extends AbstractVerticle implements MQTTAgent {
+public class MQTTAgent extends AbstractVerticle {
 
     private static final String BROKER_ADDRESS = "broker.mqtt-dashboard.com";
     private static final String TOPIC_NAME = "baldo-assignment03";
 
     private MqttClient client;
 
-    public MQTTAgentImpl() {
+    public MQTTAgent() {
     }
 
     @Override
