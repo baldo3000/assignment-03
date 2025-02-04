@@ -10,6 +10,6 @@
 #define WIFI_SSID "*"
 #define WIFI_PASSWORD "*"
 #define MQTT_SERVER "broker.mqtt-dashboard.com"
-#define TOPIC "baldo-assignment03"
+#define TOPIC "baldo3000-assignment03"
 
 #endif

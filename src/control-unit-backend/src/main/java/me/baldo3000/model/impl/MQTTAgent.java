@@ -11,7 +11,7 @@ import io.vertx.mqtt.MqttClient;
 public class MQTTAgent extends AbstractVerticle {
 
     private static final String BROKER_ADDRESS = "broker.mqtt-dashboard.com";
-    private static final String TOPIC_NAME = "baldo-assignment03";
+    private static final String TOPIC_NAME = "baldo3000-assignment03";
 
     private MqttClient client;
 
