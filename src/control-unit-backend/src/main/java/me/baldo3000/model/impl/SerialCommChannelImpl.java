@@ -10,16 +10,18 @@ import me.baldo3000.model.api.SerialCommChannel;
 /**
  * Comm channel implementation based on serial port.
  *
- * @author aricci
+ * @author aricci, baldo3000
  */
 public class SerialCommChannelImpl implements SerialCommChannel, SerialPortEventListener {
 
     private SerialPort serialPort;
-    private BlockingQueue<String> queue;
+    private final BlockingQueue<String> queue;
     private StringBuffer currentMsg = new StringBuffer("");
+    private long lastMsgTimestamp;
 
     public SerialCommChannelImpl() throws Exception {
         this(DEFAULT_PORT, DEFAULT_BAUD_RATE);
+        this.lastMsgTimestamp = System.currentTimeMillis();
     }
 
     public SerialCommChannelImpl(String port, int rate) throws Exception {
@@ -42,18 +44,23 @@ public class SerialCommChannelImpl implements SerialCommChannel, SerialPortEvent
 
     @Override
     public void sendMsg(String msg) {
-        char[] array = (msg + "\n").toCharArray();
-        byte[] bytes = new byte[array.length];
-        for (int i = 0; i < array.length; i++) {
-            bytes[i] = (byte) array[i];
-        }
-        System.out.println("Sending: " + msg);
-        try {
-            synchronized (serialPort) {
-                serialPort.writeBytes(bytes);
+        final long currentTime = System.currentTimeMillis();
+        // if the last message was sent more than SERIAL_TIMEOUT ms ago
+        if (currentTime - lastMsgTimestamp >= SERIAL_TIMEOUT) {
+            this.lastMsgTimestamp = currentTime;
+            char[] array = (msg + "\n").toCharArray();
+            byte[] bytes = new byte[array.length];
+            for (int i = 0; i < array.length; i++) {
+                bytes[i] = (byte) array[i];
             }
-        } catch (Exception ex) {
-            ex.printStackTrace();
+            // System.out.println("Sending: " + msg);
+            try {
+                synchronized (serialPort) {
+                    serialPort.writeBytes(bytes);
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
     }
 

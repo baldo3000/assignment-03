@@ -24,7 +24,7 @@ void setup()
   randomSeed(micros());
   connection.init();
   state = NETWORK_PROBLEM; // The system always start not connected
-  samplingPeriod = 5000;   // 5 seconds (default)
+  samplingPeriod = 3000;   // 3 seconds (default)
   lastSampleTime = 0;
 }
 

@@ -31,16 +31,14 @@ public class ControllerImpl implements Controller {
     @Override
     public void initialize() {
         this.vertx.deployVerticle(this.mqttAgent);
-        this.vertx.eventBus().consumer("mqtt-incoming-messages", message -> {
+        this.vertx.eventBus().consumer(MQTTAgent.INCOMING_ADDRESS, message -> {
             final String payload = message.body().toString();
             System.out.println("Received message: " + payload);
             if (payload.length() >= 3) {
                 final String prefix = payload.substring(0, 3);
                 if (prefix.equals("ts:")) {
                     try {
-                        final double temperature = Double.parseDouble(payload.substring(3));
-                        this.latestReportedTemperature = temperature;
-                        System.out.println("Temperature: " + temperature);
+                        this.latestReportedTemperature = Double.parseDouble(payload.substring(3));
                     } catch (final NumberFormatException ignored) {
                     }
                 } else if (prefix.equals("df:")) {
@@ -61,7 +59,7 @@ public class ControllerImpl implements Controller {
                 case NORMAL -> {
                     if (doOnce()) {
                         System.out.println(State.NORMAL);
-                        this.vertx.eventBus().send("mqtt-outgoing-messages", "cu:" + NORMAL_SAMPLE_INTERVAL);
+                        this.vertx.eventBus().send(MQTTAgent.OUTGOING_ADDRESS, "cu:" + NORMAL_SAMPLE_INTERVAL);
                     }
                     if (this.latestReportedTemperature >= HOT_THRESHOLD) {
                         setState(State.HOT);
@@ -70,7 +68,7 @@ public class ControllerImpl implements Controller {
                 case HOT -> {
                     if (doOnce()) {
                         System.out.println(State.HOT);
-                        this.vertx.eventBus().send("mqtt-outgoing-messages", "cu:" + HOT_SAMPLE_INTERVAL);
+                        this.vertx.eventBus().send(MQTTAgent.OUTGOING_ADDRESS, "cu:" + HOT_SAMPLE_INTERVAL);
                     }
                     if (this.latestReportedTemperature < HOT_THRESHOLD) {
                         setState(State.NORMAL);

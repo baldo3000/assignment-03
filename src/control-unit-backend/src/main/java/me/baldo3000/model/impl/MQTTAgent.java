@@ -10,6 +10,9 @@ import io.vertx.mqtt.MqttClient;
  */
 public class MQTTAgent extends AbstractVerticle {
 
+    public static final String INCOMING_ADDRESS = "mqtt-incoming-messages";
+    public static final String OUTGOING_ADDRESS = "mqtt-outgoing-messages";
+
     private static final String BROKER_ADDRESS = "broker.mqtt-dashboard.com";
     private static final String TOPIC_NAME = "baldo3000-assignment03";
 
@@ -26,22 +29,21 @@ public class MQTTAgent extends AbstractVerticle {
             log("connected");
             log("subscribing...");
             this.client.publishHandler(s -> {
-//                System.out.println("There are new message in topic: " + s.topicName());
+//                System.out.println("There is a new message in topic: " + s.topicName());
 //                System.out.println("Content(as string) of the message: " + s.payload().toString());
 //                System.out.println("QoS: " + s.qosLevel() + "\n");
-                this.vertx.eventBus().send("mqtt-incoming-messages", s.payload().toString());
+                this.vertx.eventBus().send(INCOMING_ADDRESS, s.payload().toString());
             }).subscribe(TOPIC_NAME, MqttQoS.AT_LEAST_ONCE.value());
             log("subscribed...\n");
         });
 
-        this.vertx.eventBus().consumer("mqtt-outgoing-messages", message -> {
+        this.vertx.eventBus().consumer(OUTGOING_ADDRESS, message -> {
             final String payload = message.body().toString();
             publishMessage(payload);
         });
     }
 
     private void publishMessage(final String message) {
-//        log("publishing a msg");
         this.client.publish(TOPIC_NAME, Buffer.buffer(message), MqttQoS.AT_LEAST_ONCE, false, true);
     }
 
