@@ -13,7 +13,7 @@ WorkflowTask::WorkflowTask(UserConsole *pUserConsole) : pUserConsole(pUserConsol
     this->pWindow = new ServoMotorImpl(WINDOW_MOTOR_PIN);
     this->pWindow->on();
     this->currentAperture = 0;
-    this->reportedTemperature = 0.0;
+    this->reportedTemperature = NAN;
     setState(AUTOMATIC);
     // this->pUserConsole->displayWelcome();
 }
