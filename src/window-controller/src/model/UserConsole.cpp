@@ -70,5 +70,7 @@ void UserConsole::displayAperture(const int aperture)
 void UserConsole::displayTemperature(const double temperature)
 {
     this->pLcd->setCursor(0, 3);
-    this->pLcd->print("Temperature: " + String(temperature));
+    this->pLcd->print("Temperature:        ");
+    this->pLcd->setCursor(13, 3);
+    this->pLcd->print(temperature);
 }
