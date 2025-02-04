@@ -14,10 +14,13 @@ public class EngineImpl implements Engine {
     private long stateTimestamp;
     private boolean justEntered;
     private double latestReportedTemperature;
+    private boolean resetSignal;
 
     public EngineImpl() {
         this.vertx = Vertx.vertx();
         this.mqttAgent = new MQTTAgentImpl();
+        this.latestReportedTemperature = 0.0;
+        this.resetSignal = false;
     }
 
     @Override
@@ -34,6 +37,11 @@ public class EngineImpl implements Engine {
                         this.latestReportedTemperature = temperature;
                         System.out.println("Temperature: " + temperature);
                     } catch (final NumberFormatException ignored) {
+                    }
+                } else if (prefix.equals("df:")) {
+                    final String content = payload.substring(3);
+                    if (content.equals("reset")) {
+                        this.resetSignal = true;
                     }
                 }
             }
@@ -72,10 +80,17 @@ public class EngineImpl implements Engine {
                     if (this.latestReportedTemperature < TOO_HOT_THRESHOLD) {
                         setState(State.HOT);
                     }
+                    if (System.currentTimeMillis() - this.stateTimestamp >= ALARM_TRIGGER_TIME) {
+                        setState(State.ALARM);
+                    }
                 }
                 case ALARM -> {
                     if (doOnce()) {
                         System.out.println(State.ALARM);
+                    }
+                    if (this.resetSignal) {
+                        this.resetSignal = false;
+                        setState(State.NORMAL);
                     }
                 }
                 default -> {
