@@ -71,6 +71,7 @@ void WorkflowTask::tick()
         }
         this->currentAperture = this->pUserConsole->getPotValue();
         const int angle = map(this->currentAperture, 0, 100, 0, WINDOW_MAX_APERTURE_ANGLE);
+        // Serial.println(String("aperture: ") + this->currentAperture + " angle: " + angle);
         this->pWindow->setPosition(angle);
         this->pUserConsole->displayAperture(this->currentAperture);
         this->pUserConsole->displayTemperature(this->reportedTemperature);
