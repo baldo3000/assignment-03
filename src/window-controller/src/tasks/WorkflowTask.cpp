@@ -108,19 +108,20 @@ void WorkflowTask::checkMsg()
             char contentCopy[content.length()];
             strcpy(contentCopy, content.c_str());
 
-            String mode = strtok(contentCopy, ";");
-            String aperture = strtok(NULL, ";");
+            // String mode = strtok(contentCopy, ";"); changing mode is disabled from the control unit
+            // String aperture = strtok(NULL, ";");
+            String aperture = strtok(contentCopy, ";");
             String temperature = strtok(NULL, ";");
 
             // Change mode checks
-            if (this->state == AUTOMATIC && mode == "M")
-            {
-                setState(MANUAL);
-            }
-            else if (this->state == MANUAL && mode == "A")
-            {
-                setState(AUTOMATIC);
-            }
+            // if (this->state == AUTOMATIC && mode == "M")
+            // {
+            //     setState(MANUAL);
+            // }
+            // else if (this->state == MANUAL && mode == "A")
+            // {
+            //     setState(AUTOMATIC);
+            // }
 
             // Set values checks
             if (this->state == AUTOMATIC && isNumeric(aperture))

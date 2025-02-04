@@ -1,6 +1,6 @@
 package me.baldo3000.engine.api;
 
-public interface Engine {
+public interface Controller {
 
     public static final double HOT_THRESHOLD = 20.0;
     public static final double TOO_HOT_THRESHOLD = 25.0;
@@ -10,33 +10,33 @@ public interface Engine {
     public static final long HOT_SAMPLE_INTERVAL = 1000;
 
     enum State {
-        NORMAL,
-        HOT,
-        TOO_HOT,
-        ALARM
+        NORMAL, HOT, TOO_HOT, ALARM
     }
 
+    /**
+     * Initialize the application.
+     */
     void initialize();
 
     /**
-     * starts the main loop of the application.
+     * Start the main loop of the application.
      */
     void mainLoop();
 
     /**
-     * terminate engine.
+     * Terminate application.
      */
     void terminate();
 
     /**
-     * Changes the state of the engine.
+     * Changes the state of the application.
      *
      * @param state status to put
      */
     void setState(State state);
 
     /**
-     * Gives the current State of the engine.
+     * Gives the current State of the application.
      *
      * @return the current status
      */

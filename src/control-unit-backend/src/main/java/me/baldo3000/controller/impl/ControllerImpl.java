@@ -1,11 +1,10 @@
 package me.baldo3000.engine.impl;
 
 import io.vertx.core.Vertx;
-import me.baldo3000.engine.api.Engine;
-import me.baldo3000.model.api.MQTTAgent;
-import me.baldo3000.model.impl.MQTTAgentImpl;
+import me.baldo3000.engine.api.Controller;
+import me.baldo3000.model.impl.MQTTAgent;
 
-public class EngineImpl implements Engine {
+public class ControllerImpl implements Controller {
 
     private final Vertx vertx;
     private final MQTTAgent mqttAgent;
@@ -16,9 +15,9 @@ public class EngineImpl implements Engine {
     private double latestReportedTemperature;
     private boolean resetSignal;
 
-    public EngineImpl() {
+    public ControllerImpl() {
         this.vertx = Vertx.vertx();
-        this.mqttAgent = new MQTTAgentImpl();
+        this.mqttAgent = new MQTTAgent();
         this.latestReportedTemperature = 0.0;
         this.resetSignal = false;
     }
