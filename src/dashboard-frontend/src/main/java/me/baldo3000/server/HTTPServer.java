@@ -16,7 +16,7 @@ import java.util.List;
 
 public class HTTPServer extends AbstractVerticle {
 
-    private static final int MAX_SIZE = 10;
+    private static final int MAX_SIZE = 50;
     private final List<DataValue> values;
 
     public HTTPServer() {

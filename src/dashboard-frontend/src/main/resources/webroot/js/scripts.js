@@ -1,18 +1,49 @@
 document.addEventListener("DOMContentLoaded", function () {
 
+    const ctx = document.getElementById("dataChart").getContext("2d");
+    const dataChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Temperature',
+                data: [],
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1,
+                fill: false
+            }]
+        },
+        options: {
+            scales: {
+                xAxes: [{
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'Time'
+                    }
+                }],
+                yAxes: [{
+                    ticks: {
+                        beginAtZero: true,
+                        max: 40
+                    },
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'Temperature (°C)'
+                    }
+                }]
+            }
+        }
+    });
+
     // Create an XMLHttpRequest object
     const xhttp = new XMLHttpRequest();
 
     // Define a callback function
     xhttp.onload = function () {
-        // Here you can use the Data
-        const ul = document.getElementById("datalist");
-        ul.innerHTML = "";
-        const values = JSON.parse(this.response);
+        const values = JSON.parse(this.response).reverse();
+        const labels = [];
+        const data = [];
         for (const value of values) {
-            const element = document.createElement("li");
-            const elementList = document.createElement("ul");
-
             const aperture = document.createElement("li");
             aperture.innerHTML = value["aperture"];
             const temperature = document.createElement("li");
@@ -20,14 +51,12 @@ document.addEventListener("DOMContentLoaded", function () {
             const time = document.createElement("li");
             time.innerHTML = value["time"]
 
-            elementList.appendChild(aperture);
-            elementList.appendChild(temperature);
-            elementList.appendChild(time);
-
-            element.appendChild(elementList);
-
-            ul.appendChild(element);
+            labels.push(new Date(value["time"]).toLocaleTimeString());
+            data.push(value["temperature"]);
         }
+        dataChart.data.labels = labels;
+        dataChart.data.datasets[0].data = data;
+        dataChart.update();
     }
 
     // Send a request for values
