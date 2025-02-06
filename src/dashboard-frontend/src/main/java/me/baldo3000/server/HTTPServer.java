@@ -8,6 +8,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
+import io.vertx.ext.web.handler.StaticHandler;
 import me.baldo3000.common.DataValue;
 
 import java.util.ArrayList;
@@ -19,12 +20,13 @@ public class HTTPServer extends AbstractVerticle {
     private final List<DataValue> values;
 
     public HTTPServer() {
-        this.values = new ArrayList<>();
+        this.values = new ArrayList<>(MAX_SIZE);
     }
 
     @Override
     public void start() {
         final Router router = Router.router(vertx);
+        router.route().handler(StaticHandler.create().setCachingEnabled(true));
         router.route().handler(BodyHandler.create());
         router.route(HttpMethod.POST, "/api/data").handler(this::handleAddNewData);
         router.route(HttpMethod.GET, "/api/data").handler(this::handleGetData);
