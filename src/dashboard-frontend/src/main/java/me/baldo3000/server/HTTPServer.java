@@ -8,14 +8,18 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
+import me.baldo3000.common.DataValue;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class HTTPServer extends AbstractVerticle {
 
     private static final int MAX_SIZE = 10;
-    private final JsonArray values;
+    private final List<DataValue> values;
 
     public HTTPServer() {
-        this.values = new JsonArray();
+        this.values = new ArrayList<>();
     }
 
     @Override
@@ -37,21 +41,31 @@ public class HTTPServer extends AbstractVerticle {
         if (jsonObject == null) {
             response.setStatusCode(400).end();
         } else {
-//            final int aperture = res.getInteger("aperture");
-//            final double temperature = res.getDouble("temperature");
-//            final long time = res.getLong("time");
             System.out.println(jsonObject);
-            this.values.add(0, jsonObject);
-            if (this.values.size() > MAX_SIZE) {
-                this.values.remove(MAX_SIZE);
+            final Integer aperture = jsonObject.getInteger("aperture");
+            final Double temperature = jsonObject.getDouble("temperature");
+            final Long time = jsonObject.getLong("time");
+            if (aperture != null && temperature != null && time != null) {
+                this.values.addFirst(new DataValue(aperture, temperature, time));
+                if (this.values.size() > MAX_SIZE) {
+                    this.values.removeLast();
+                }
             }
             response.setStatusCode(200).end();
         }
     }
 
     private void handleGetData(final RoutingContext routingContext) {
+        final JsonArray arr = new JsonArray();
+        for (final DataValue value : this.values) {
+            final JsonObject obj = new JsonObject();
+            obj.put("aperture", value.aperture());
+            obj.put("temperature", value.temperature());
+            obj.put("time", value.time());
+            arr.add(obj);
+        }
         routingContext.response()
                 .putHeader("content-type", "application/json")
-                .end(this.values.encodePrettily());
+                .end(arr.encodePrettily());
     }
 }
