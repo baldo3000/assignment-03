@@ -18,9 +18,19 @@ public class HTTPServer extends AbstractVerticle {
 
     private static final int MAX_SIZE = 50;
     private final List<DataValue> values;
+    private int aperture;
+    private double temperature;
+    private double minTemperature;
+    private double maxTemperature;
+    private double averageTemperature;
 
     public HTTPServer() {
         this.values = new ArrayList<>(MAX_SIZE);
+        this.aperture = 0;
+        this.temperature = 0.0;
+        this.minTemperature = 0.0;
+        this.maxTemperature = 0.0;
+        this.averageTemperature = 0.0;
     }
 
     @Override
@@ -52,6 +62,7 @@ public class HTTPServer extends AbstractVerticle {
                 if (this.values.size() > MAX_SIZE) {
                     this.values.removeLast();
                 }
+                updateStats();
             }
             response.setStatusCode(200).end();
         }
@@ -66,8 +77,42 @@ public class HTTPServer extends AbstractVerticle {
             obj.put("time", value.time());
             arr.add(obj);
         }
+        final JsonObject stats = new JsonObject();
+        stats.put("aperture", this.aperture);
+        stats.put("temperature", this.temperature);
+        stats.put("minTemperature", this.minTemperature);
+        stats.put("maxTemperature", this.maxTemperature);
+        stats.put("averageTemperature", this.averageTemperature);
+
+        arr.add(stats);
         routingContext.response()
                 .putHeader("content-type", "application/json")
                 .end(arr.encodePrettily());
+    }
+
+    private void updateStats() {
+        if (values.isEmpty()) {
+            return;
+        }
+
+        double sumTemperature = 0.0;
+        double minTemp = Double.MAX_VALUE;
+        double maxTemp = Double.MIN_VALUE;
+
+        for (final DataValue value : values) {
+            sumTemperature += value.temperature();
+            if (value.temperature() < minTemp) {
+                minTemp = value.temperature();
+            }
+            if (value.temperature() > maxTemp) {
+                maxTemp = value.temperature();
+            }
+        }
+
+        this.temperature = values.getFirst().temperature();
+        this.aperture = values.getFirst().aperture();
+        this.minTemperature = minTemp;
+        this.maxTemperature = maxTemp;
+        this.averageTemperature = sumTemperature / values.size();
     }
 }

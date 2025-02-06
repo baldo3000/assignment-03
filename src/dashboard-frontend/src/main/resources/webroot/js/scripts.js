@@ -23,8 +23,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 }],
                 yAxes: [{
                     ticks: {
-                        beginAtZero: true,
-                        max: 40
+                        beginAtZero: true
                     },
                     scaleLabel: {
                         display: true,
@@ -39,11 +38,13 @@ document.addEventListener("DOMContentLoaded", function () {
     const xhttp = new XMLHttpRequest();
 
     // Define a callback function
-    xhttp.onload = function () {
+    xhttp.onload = function (ev) {
+        const url = xhttp.responseURL;
         const values = JSON.parse(this.response).reverse();
+        const [firstValue, ...restValues] = values;
         const labels = [];
         const data = [];
-        for (const value of values) {
+        for (const value of restValues) {
             const aperture = document.createElement("li");
             aperture.innerHTML = value["aperture"];
             const temperature = document.createElement("li");
@@ -54,9 +55,18 @@ document.addEventListener("DOMContentLoaded", function () {
             labels.push(new Date(value["time"]).toLocaleTimeString());
             data.push(value["temperature"]);
         }
+        // Update chart
         dataChart.data.labels = labels;
         dataChart.data.datasets[0].data = data;
         dataChart.update();
+
+        // Update statistics
+        document.getElementById("aperture").innerText = "Aperture: " + firstValue["aperture"];
+        document.getElementById("temperature").innerText = "Temperature: " + firstValue["temperature"];
+        document.getElementById("minTemperature").innerText = "Min temperature: " + firstValue["minTemperature"];
+        document.getElementById("maxTemperature").innerText = "Max temperature: " + firstValue["maxTemperature"];
+        document.getElementById("averageTemperature").innerText = "Average temperature: " + firstValue["averageTemperature"].toFixed(2);
+
     }
 
     // Send a request for values

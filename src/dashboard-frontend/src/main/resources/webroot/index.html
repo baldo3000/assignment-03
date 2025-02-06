@@ -10,7 +10,20 @@
     <h1>Dashboard</h1>
 </header>
 <main>
-    <canvas id="dataChart" style="width:100%;max-width:700px"></canvas>
+    <section>
+        <h2>Temperature chart</h2>
+        <canvas id="dataChart" style="width:100%;max-width:700px"></canvas>
+    </section>
+    <section>
+        <h2>Stats</h2>
+        <ul>
+            <li id="aperture"></li>
+            <li id="temperature">Current Temperature:</li>
+            <li id="minTemperature">Min Temperature:</li>
+            <li id="maxTemperature">Max Temperature:</li>
+            <li id="averageTemperature">Average Temperature:</li>
+        </ul>
+    </section>
 </main>
 <!--<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
