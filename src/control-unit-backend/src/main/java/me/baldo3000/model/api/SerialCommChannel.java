@@ -9,7 +9,6 @@ public interface SerialCommChannel {
 
     static final String DEFAULT_PORT = "COM9";
     static final int DEFAULT_BAUD_RATE = 115200;
-    static final long SERIAL_TIMEOUT = 250;
 
     /**
      * Send a message represented by a string (without new line).

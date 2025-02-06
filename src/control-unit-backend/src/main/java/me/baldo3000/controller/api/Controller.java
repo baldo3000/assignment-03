@@ -7,7 +7,7 @@ public interface Controller {
     static final long ALARM_TRIGGER_TIME = 5000;
 
     static final long NORMAL_SAMPLE_INTERVAL = 3000;
-    static final long HOT_SAMPLE_INTERVAL = 1000;
+    static final long HOT_SAMPLE_INTERVAL = 1500;
 
     enum State {
         NORMAL, HOT, TOO_HOT, ALARM

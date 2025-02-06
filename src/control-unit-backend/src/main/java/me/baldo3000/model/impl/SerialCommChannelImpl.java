@@ -44,23 +44,18 @@ public class SerialCommChannelImpl implements SerialCommChannel, SerialPortEvent
 
     @Override
     public void sendMsg(String msg) {
-        final long currentTime = System.currentTimeMillis();
-        // if the last message was sent more than SERIAL_TIMEOUT ms ago
-        if (currentTime - lastMsgTimestamp >= SERIAL_TIMEOUT) {
-            this.lastMsgTimestamp = currentTime;
-            char[] array = (msg + "\n").toCharArray();
-            byte[] bytes = new byte[array.length];
-            for (int i = 0; i < array.length; i++) {
-                bytes[i] = (byte) array[i];
+        char[] array = (msg + "\n").toCharArray();
+        byte[] bytes = new byte[array.length];
+        for (int i = 0; i < array.length; i++) {
+            bytes[i] = (byte) array[i];
+        }
+        System.out.println("Sending over serial: " + msg);
+        try {
+            synchronized (serialPort) {
+                serialPort.writeBytes(bytes);
             }
-            // System.out.println("Sending: " + msg);
-            try {
-                synchronized (serialPort) {
-                    serialPort.writeBytes(bytes);
-                }
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }
 

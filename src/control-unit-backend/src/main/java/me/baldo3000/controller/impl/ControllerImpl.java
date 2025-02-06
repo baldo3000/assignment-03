@@ -15,6 +15,7 @@ public class ControllerImpl implements Controller {
     private State state;
     private long stateTimestamp;
     private boolean justEntered;
+    private double previouslyReportedTemperature;
     private double latestReportedTemperature;
     private boolean resetSignal;
     private int windowAperture;
@@ -23,6 +24,7 @@ public class ControllerImpl implements Controller {
         this.vertx = vertx;
         this.mqttAgent = mqttAgent;
         this.channel = channel;
+        this.previouslyReportedTemperature = 0.0;
         this.latestReportedTemperature = 0.0;
         this.resetSignal = false;
         this.windowAperture = 0;
@@ -100,9 +102,12 @@ public class ControllerImpl implements Controller {
                 }
             }
 
-            // Send message to window controller
-            this.windowAperture = temperatureToWindowAperture(this.latestReportedTemperature);
-            this.channel.sendMsg(this.windowAperture + ";" + this.latestReportedTemperature);
+            // Send message to window controller if temperature have changed from last reading
+            if (this.latestReportedTemperature != this.previouslyReportedTemperature) {
+                this.windowAperture = temperatureToWindowAperture(this.latestReportedTemperature);
+                this.channel.sendMsg(this.windowAperture + ";" + this.latestReportedTemperature);
+                this.previouslyReportedTemperature = this.latestReportedTemperature;
+            }
 
             // Wait a bit
             try {
