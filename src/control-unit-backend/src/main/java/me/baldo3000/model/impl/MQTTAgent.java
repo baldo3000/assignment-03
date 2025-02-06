@@ -44,7 +44,9 @@ public class MQTTAgent extends AbstractVerticle {
     }
 
     private void publishMessage(final String message) {
-        this.client.publish(TOPIC_NAME, Buffer.buffer(message), MqttQoS.AT_LEAST_ONCE, false, true);
+        if (this.client.isConnected()) {
+            this.client.publish(TOPIC_NAME, Buffer.buffer(message), MqttQoS.AT_LEAST_ONCE, false, true);
+        }
     }
 
     private void log(final String msg) {

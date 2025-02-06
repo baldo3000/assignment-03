@@ -1,30 +1,31 @@
 package me.baldo3000.controller.impl;
 
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.client.WebClient;
 import me.baldo3000.controller.api.Controller;
 import me.baldo3000.model.api.SerialCommChannel;
 import me.baldo3000.model.impl.MQTTAgent;
-import me.baldo3000.model.impl.SerialCommChannelImpl;
 
 public class ControllerImpl implements Controller {
 
     private final Vertx vertx;
     private final MQTTAgent mqttAgent;
+    private final WebClient webClient;
     private final SerialCommChannel channel;
 
     private State state;
     private long stateTimestamp;
     private boolean justEntered;
-    private double previouslyReportedTemperature;
     private double latestReportedTemperature;
     private boolean resetSignal;
     private int windowAperture;
 
-    public ControllerImpl(final Vertx vertx, final MQTTAgent mqttAgent, final SerialCommChannel channel) {
+    public ControllerImpl(final Vertx vertx, final MQTTAgent mqttAgent, final WebClient webClient, final SerialCommChannel channel) {
         this.vertx = vertx;
         this.mqttAgent = mqttAgent;
+        this.webClient = webClient;
         this.channel = channel;
-        this.previouslyReportedTemperature = 0.0;
         this.latestReportedTemperature = 0.0;
         this.resetSignal = false;
         this.windowAperture = 0;
@@ -35,12 +36,19 @@ public class ControllerImpl implements Controller {
         this.vertx.deployVerticle(this.mqttAgent);
         this.vertx.eventBus().consumer(MQTTAgent.INCOMING_ADDRESS, message -> {
             final String payload = message.body().toString();
-            System.out.println("Received message: " + payload);
+            System.out.println("Received message from MQTT: " + payload);
             if (payload.length() >= 3) {
                 final String prefix = payload.substring(0, 3);
                 if (prefix.equals("ts:")) {
                     try {
-                        this.latestReportedTemperature = Double.parseDouble(payload.substring(3));
+                        final double temperature = Double.parseDouble(payload.substring(3));
+                        if (temperature != this.latestReportedTemperature) {
+                            this.latestReportedTemperature = temperature;
+                            this.windowAperture = temperatureToWindowAperture(this.latestReportedTemperature);
+                            // Send over serial only if changed to avoid congestions
+                            sendSerial();
+                        }
+                        sendHTTP();
                     } catch (final NumberFormatException ignored) {
                     }
                 } else if (prefix.equals("df:")) {
@@ -102,13 +110,6 @@ public class ControllerImpl implements Controller {
                 }
             }
 
-            // Send message to window controller if temperature have changed from last reading
-            if (this.latestReportedTemperature != this.previouslyReportedTemperature) {
-                this.windowAperture = temperatureToWindowAperture(this.latestReportedTemperature);
-                this.channel.sendMsg(this.windowAperture + ";" + this.latestReportedTemperature);
-                this.previouslyReportedTemperature = this.latestReportedTemperature;
-            }
-
             // Wait a bit
             try {
                 Thread.sleep(100); // Add a small delay TODO: remove
@@ -141,6 +142,23 @@ public class ControllerImpl implements Controller {
             return true;
         }
         return false;
+    }
+
+    private void sendSerial() {
+        this.channel.sendMsg(this.windowAperture + ";" + this.latestReportedTemperature);
+    }
+
+    private void sendHTTP() {
+        final JsonObject obj = new JsonObject();
+        obj.put("aperture", this.windowAperture);
+        obj.put("temperature", this.latestReportedTemperature);
+        obj.put("time", System.currentTimeMillis());
+        this.webClient
+                .post(8080, "127.0.0.1", "/api/data")
+                .sendJsonObject(obj)
+                .onSuccess(response -> {
+                    // System.out.println("Posting - Received response with status code: " + response.statusCode());
+                });
     }
 
     private int temperatureToWindowAperture(final double temperature) {
