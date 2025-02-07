@@ -16,8 +16,16 @@ import java.util.List;
 
 public class HTTPServer extends AbstractVerticle {
 
+    private enum State {
+        NORMAL, HOT, TOO_HOT, ALARM
+    }
+
+    // Records
     private static final int MAX_SIZE = 50;
     private final List<DataValue> values;
+
+    // Current state
+    private State state;
     private int aperture;
     private double temperature;
     private double minTemperature;
@@ -26,6 +34,7 @@ public class HTTPServer extends AbstractVerticle {
 
     public HTTPServer() {
         this.values = new ArrayList<>(MAX_SIZE);
+        this.state = State.NORMAL;
         this.aperture = 0;
         this.temperature = 0.0;
         this.minTemperature = 0.0;
@@ -38,7 +47,8 @@ public class HTTPServer extends AbstractVerticle {
         final Router router = Router.router(vertx);
         router.route().handler(StaticHandler.create().setCachingEnabled(true));
         router.route().handler(BodyHandler.create());
-        router.route(HttpMethod.POST, "/api/data").handler(this::handleAddNewData);
+        router.route(HttpMethod.POST, "/api/stats").handler(this::handleAddNewData);
+        router.route(HttpMethod.POST, "/api/state").handler(this::updateState);
         router.route(HttpMethod.GET, "/api/data").handler(this::handleGetData);
 
         vertx.createHttpServer()
@@ -68,6 +78,21 @@ public class HTTPServer extends AbstractVerticle {
         }
     }
 
+    private void updateState(final RoutingContext routingContext) {
+        final HttpServerResponse response = routingContext.response();
+        final JsonObject jsonObject = routingContext.body().asJsonObject();
+        if (jsonObject == null) {
+            response.setStatusCode(400).end();
+        } else {
+            System.out.println(jsonObject);
+            try {
+                this.state = State.valueOf(jsonObject.getString("state"));
+            } catch (final IllegalArgumentException ignored) {
+            }
+            response.setStatusCode(200).end();
+        }
+    }
+
     private void handleGetData(final RoutingContext routingContext) {
         final JsonArray arr = new JsonArray();
         for (final DataValue value : this.values) {
@@ -78,6 +103,7 @@ public class HTTPServer extends AbstractVerticle {
             arr.add(obj);
         }
         final JsonObject stats = new JsonObject();
+        stats.put("state", this.state.toString());
         stats.put("aperture", this.aperture);
         stats.put("temperature", this.temperature);
         stats.put("minTemperature", this.minTemperature);

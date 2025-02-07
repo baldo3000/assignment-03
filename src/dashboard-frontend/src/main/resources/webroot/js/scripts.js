@@ -67,10 +67,10 @@ document.addEventListener("DOMContentLoaded", function () {
     // Define a callback function
     xhttp.onload = function (ev) {
         const values = JSON.parse(this.response).reverse();
-        const [firstValue, ...restValues] = values;
+        const [stats, ...records] = values;
         const labels = [];
         const data = [];
-        for (const value of restValues) {
+        for (const value of records) {
             labels.push(new Date(value["time"]).toLocaleTimeString());
             data.push(value["temperature"]);
         }
@@ -80,11 +80,12 @@ document.addEventListener("DOMContentLoaded", function () {
         dataChart.update();
 
         // Update statistics
-        document.getElementById("aperture").innerText = "Aperture: " + firstValue["aperture"];
-        document.getElementById("temperature").innerText = "Temperature: " + firstValue["temperature"];
-        document.getElementById("minTemperature").innerText = "Min temperature: " + firstValue["minTemperature"];
-        document.getElementById("maxTemperature").innerText = "Max temperature: " + firstValue["maxTemperature"];
-        document.getElementById("averageTemperature").innerText = "Average temperature: " + firstValue["averageTemperature"].toFixed(2);
+        document.getElementById("state").innerText = "State: " + stats["state"];
+        document.getElementById("aperture").innerText = "Aperture: " + stats["aperture"];
+        document.getElementById("temperature").innerText = "Temperature: " + stats["temperature"];
+        document.getElementById("minTemperature").innerText = "Min temperature: " + stats["minTemperature"];
+        document.getElementById("maxTemperature").innerText = "Max temperature: " + stats["maxTemperature"];
+        document.getElementById("averageTemperature").innerText = "Average temperature: " + stats["averageTemperature"].toFixed(2);
 
     }
 
