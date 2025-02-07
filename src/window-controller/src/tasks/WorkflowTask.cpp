@@ -134,14 +134,11 @@ void WorkflowTask::checkMsg()
                     this->currentAperture = apertureInt;
                 }
             }
-            else if (this->state == MANUAL && isNumeric(temperature))
+            if (isNumeric(temperature))
             {
-                if (isNumeric(temperature))
-                {
-                    const double temperatureDouble = temperature.toDouble();
-                    // Logger.log("temperature: " + String(temperatureDouble));
-                    this->reportedTemperature = temperatureDouble;
-                }
+                const double temperatureDouble = temperature.toDouble();
+                // Logger.log("temperature: " + String(temperatureDouble));
+                this->reportedTemperature = temperatureDouble;
             }
 
             delete msg;
