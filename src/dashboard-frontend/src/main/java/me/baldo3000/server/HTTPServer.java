@@ -47,8 +47,7 @@ public class HTTPServer extends AbstractVerticle {
         final Router router = Router.router(vertx);
         router.route().handler(StaticHandler.create().setCachingEnabled(true));
         router.route().handler(BodyHandler.create());
-        router.route(HttpMethod.POST, "/api/stats").handler(this::handleAddNewData);
-        router.route(HttpMethod.POST, "/api/state").handler(this::updateState);
+        router.route(HttpMethod.POST, "/api/data").handler(this::handleAddNewData);
         router.route(HttpMethod.GET, "/api/data").handler(this::handleGetData);
 
         vertx.createHttpServer()
@@ -64,6 +63,7 @@ public class HTTPServer extends AbstractVerticle {
             response.setStatusCode(400).end();
         } else {
             System.out.println(jsonObject);
+            // Update stats
             final Integer aperture = jsonObject.getInteger("aperture");
             final Double temperature = jsonObject.getDouble("temperature");
             final Long time = jsonObject.getLong("time");
@@ -74,17 +74,7 @@ public class HTTPServer extends AbstractVerticle {
                 }
                 updateStats();
             }
-            response.setStatusCode(200).end();
-        }
-    }
-
-    private void updateState(final RoutingContext routingContext) {
-        final HttpServerResponse response = routingContext.response();
-        final JsonObject jsonObject = routingContext.body().asJsonObject();
-        if (jsonObject == null) {
-            response.setStatusCode(400).end();
-        } else {
-            System.out.println(jsonObject);
+            // Update state
             try {
                 this.state = State.valueOf(jsonObject.getString("state"));
             } catch (final IllegalArgumentException ignored) {

@@ -131,7 +131,6 @@ public class ControllerImpl implements Controller {
         this.state = state;
         this.stateTimestamp = System.currentTimeMillis();
         this.justEntered = true;
-        sendStateHTTP(state);
     }
 
     @Override
@@ -153,25 +152,15 @@ public class ControllerImpl implements Controller {
 
     private void sendStatsHTTP() {
         final JsonObject obj = new JsonObject();
+        obj.put("state", this.state.toString());
         obj.put("aperture", this.windowAperture);
         obj.put("temperature", this.latestReportedTemperature);
         obj.put("time", System.currentTimeMillis());
         this.webClient
-                .post(8080, "127.0.0.1", "/api/stats")
+                .post(8080, "127.0.0.1", "/api/data")
                 .sendJsonObject(obj)
                 .onSuccess(response -> {
                     // System.out.println("Posting stats - Received response with status code: " + response.statusCode());
-                });
-    }
-
-    private void sendStateHTTP(final State state) {
-        final JsonObject obj = new JsonObject();
-        obj.put("state", this.state.toString());
-        this.webClient
-                .post(8080, "127.0.0.1", "/api/state")
-                .sendJsonObject(obj)
-                .onSuccess(response -> {
-                    // System.out.println("Posting state - Received response with status code: " + response.statusCode());
                 });
     }
 
