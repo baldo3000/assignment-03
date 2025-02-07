@@ -1,6 +1,7 @@
 package me.baldo3000.controller.impl;
 
 import io.vertx.core.Vertx;
+import io.vertx.core.http.ClientWebSocket;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 import me.baldo3000.controller.api.Controller;
@@ -11,8 +12,8 @@ public class ControllerImpl implements Controller {
 
     private final Vertx vertx;
     private final MQTTAgent mqttAgent;
-    private final WebClient webClient;
     private final SerialCommChannel channel;
+    private final ClientWebSocket webSocket;
 
     private State state;
     private long stateTimestamp;
@@ -21,14 +22,14 @@ public class ControllerImpl implements Controller {
     private boolean resetSignal;
     private int windowAperture;
 
-    public ControllerImpl(final Vertx vertx, final MQTTAgent mqttAgent, final WebClient webClient, final SerialCommChannel channel) {
+    public ControllerImpl(final Vertx vertx, final MQTTAgent mqttAgent, final SerialCommChannel channel) {
         this.vertx = vertx;
         this.mqttAgent = mqttAgent;
-        this.webClient = webClient;
         this.channel = channel;
         this.latestReportedTemperature = 0.0;
         this.resetSignal = false;
         this.windowAperture = 0;
+        this.webSocket = this.vertx.createWebSocketClient().webSocket();
     }
 
     @Override
@@ -51,14 +52,21 @@ public class ControllerImpl implements Controller {
                         sendStatsHTTP();
                     } catch (final NumberFormatException ignored) {
                     }
-                } else if (prefix.equals("df:")) {
-                    final String content = payload.substring(3);
-                    if (content.equals("reset")) {
-                        this.resetSignal = true;
-                    }
                 }
             }
         });
+        this.webSocket.textMessageHandler(msg -> {
+                    // System.out.println("Received message from server: " + msg);
+                    if (this.state.equals(State.ALARM) && msg.equals("df:reset")) {
+                        System.out.println("Reset signal received");
+                        this.resetSignal = true;
+                    }
+                })
+                .connect(8080, "127.0.0.1", "/ws").onComplete(res -> {
+                    if (res.succeeded()) {
+                        System.out.println("Websocket connected to server!");
+                    }
+                });
         setState(State.NORMAL);
     }
 
@@ -147,7 +155,9 @@ public class ControllerImpl implements Controller {
     }
 
     private void sendStatsSerial() {
-        this.channel.sendMsg(this.windowAperture + ";" + this.latestReportedTemperature);
+        if (this.channel.isOpen()) {
+            this.channel.sendMsg(this.windowAperture + ";" + this.latestReportedTemperature);
+        }
     }
 
     private void sendStatsHTTP() {
@@ -156,12 +166,8 @@ public class ControllerImpl implements Controller {
         obj.put("aperture", this.windowAperture);
         obj.put("temperature", this.latestReportedTemperature);
         obj.put("time", System.currentTimeMillis());
-        this.webClient
-                .post(8080, "127.0.0.1", "/api/data")
-                .sendJsonObject(obj)
-                .onSuccess(response -> {
-                    // System.out.println("Posting stats - Received response with status code: " + response.statusCode());
-                });
+        this.webSocket.writeTextMessage(obj.encode())
+                .onFailure(response -> System.out.println("Could send stats, error: " + response.getMessage()));
     }
 
     private int temperatureToWindowAperture(final double temperature) {

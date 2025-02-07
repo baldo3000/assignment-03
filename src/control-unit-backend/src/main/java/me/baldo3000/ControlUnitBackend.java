@@ -12,17 +12,15 @@ public class ControlUnitBackend {
     public static void main(String[] args) {
         final Vertx vertx = Vertx.vertx();
         final MQTTAgent mqttAgent = new MQTTAgent();
-        final WebClient webClient = WebClient.create(vertx);
         final SerialCommChannel channel;
         try {
-            channel = new SerialCommChannelImpl();
             System.out.println("Waiting Arduino for rebooting...");
+            channel = new SerialCommChannelImpl();
             Thread.sleep(4000);
-            System.out.println("Ready.");
-            final Controller controller = new ControllerImpl(vertx, mqttAgent, webClient, channel);
+            final Controller controller = new ControllerImpl(vertx, mqttAgent, channel);
             controller.initialize();
             controller.mainLoop();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             e.printStackTrace();
             System.exit(1);
         }

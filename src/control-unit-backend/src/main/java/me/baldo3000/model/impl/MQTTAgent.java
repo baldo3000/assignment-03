@@ -28,25 +28,28 @@ public class MQTTAgent extends AbstractVerticle {
         this.client.connect(1883, BROKER_ADDRESS, c -> {
             log("connected");
             log("subscribing...");
+
+            // Receiving messages
             this.client.publishHandler(s -> {
 //                System.out.println("There is a new message in topic: " + s.topicName());
 //                System.out.println("Content(as string) of the message: " + s.payload().toString());
 //                System.out.println("QoS: " + s.qosLevel() + "\n");
                 this.vertx.eventBus().send(INCOMING_ADDRESS, s.payload().toString());
             }).subscribe(TOPIC_NAME, MqttQoS.AT_LEAST_ONCE.value());
+
+            // Request to send messages
+            this.vertx.eventBus().consumer(OUTGOING_ADDRESS, message -> {
+                final String payload = message.body().toString();
+                publishMessage(payload);
+            });
             log("subscribed...\n");
         });
 
-        this.vertx.eventBus().consumer(OUTGOING_ADDRESS, message -> {
-            final String payload = message.body().toString();
-            publishMessage(payload);
-        });
+
     }
 
     private void publishMessage(final String message) {
-        if (this.client.isConnected()) {
-            this.client.publish(TOPIC_NAME, Buffer.buffer(message), MqttQoS.AT_LEAST_ONCE, false, true);
-        }
+        this.client.publish(TOPIC_NAME, Buffer.buffer(message), MqttQoS.AT_LEAST_ONCE, false, true);
     }
 
     private void log(final String msg) {

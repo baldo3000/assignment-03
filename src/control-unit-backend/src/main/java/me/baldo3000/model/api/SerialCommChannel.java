@@ -34,6 +34,13 @@ public interface SerialCommChannel {
     boolean isMsgAvailable();
 
     /**
+     * Check if the comm channel is open.
+     *
+     * @return true if channel is open, false otherwise
+     */
+    boolean isOpen();
+
+    /**
      * Close the channel.
      */
     void close();

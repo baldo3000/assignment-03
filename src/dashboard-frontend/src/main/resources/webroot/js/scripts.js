@@ -61,41 +61,59 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // Create an XMLHttpRequest object
-    const xhttp = new XMLHttpRequest();
-
-    // Define a callback function
-    xhttp.onload = function (ev) {
-        const values = JSON.parse(this.response).reverse();
-        const [stats, ...records] = values;
-        const labels = [];
-        const data = [];
-        for (const value of records) {
-            labels.push(new Date(value["time"]).toLocaleTimeString());
-            data.push(value["temperature"]);
-        }
-        // Update chart
-        dataChart.data.labels = labels;
-        dataChart.data.datasets[0].data = data;
-        dataChart.update();
-
-        // Update statistics
-        document.getElementById("state").innerText = "State: " + stats["state"];
-        document.getElementById("aperture").innerText = "Aperture: " + stats["aperture"];
-        document.getElementById("temperature").innerText = "Temperature: " + stats["temperature"];
-        document.getElementById("minTemperature").innerText = "Min temperature: " + stats["minTemperature"];
-        document.getElementById("maxTemperature").innerText = "Max temperature: " + stats["maxTemperature"];
-        document.getElementById("averageTemperature").innerText = "Average temperature: " + stats["averageTemperature"].toFixed(2);
-
-    }
 
     // Send a request for values
     function getValues() {
+        const xhttp = new XMLHttpRequest();
         xhttp.open("GET", "/api/data", true);
+        xhttp.onload = function (ev) {
+            const values = JSON.parse(this.response).reverse();
+            const [stats, ...records] = values;
+            const labels = [];
+            const data = [];
+            for (const value of records) {
+                labels.push(new Date(value["time"]).toLocaleTimeString());
+                data.push(value["temperature"]);
+            }
+            // Update chart
+            dataChart.data.labels = labels;
+            dataChart.data.datasets[0].data = data;
+            dataChart.update();
+
+            // Update statistics
+            document.getElementById("state").innerText = "State: " + stats["state"];
+            document.getElementById("aperture").innerText = "Aperture: " + stats["aperture"];
+            document.getElementById("temperature").innerText = "Temperature: " + stats["temperature"];
+            document.getElementById("minTemperature").innerText = "Min temperature: " + stats["minTemperature"];
+            document.getElementById("maxTemperature").innerText = "Max temperature: " + stats["maxTemperature"];
+            document.getElementById("averageTemperature").innerText = "Average temperature: " + stats["averageTemperature"].toFixed(2);
+
+            // Enable/disable reset alarm button
+            // if(stats["state"] === "ALARM"){
+            //     document.getElementById("resetAlarm").removeAttribute("disabled");
+            // } else {
+            //     document.getElementById("resetAlarm").disabled(true);
+            // }
+
+        }
         xhttp.send();
     }
 
     // Schedule the main update
     getValues();
     setInterval(getValues, 2000);
+
+    document.getElementById("resetAlarm").addEventListener("click", function () {
+        const xhttp = new XMLHttpRequest();
+        xhttp.open("POST", "/api/alarm", true);
+        xhttp.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
+        xhttp.onload = function () {
+            if (xhttp.status === 200) {
+                console.log("Alarm reset request sent successfully");
+            } else {
+                console.error("Failed to send alarm reset request");
+            }
+        };
+        xhttp.send(JSON.stringify({reset: true}));
+    });
 });

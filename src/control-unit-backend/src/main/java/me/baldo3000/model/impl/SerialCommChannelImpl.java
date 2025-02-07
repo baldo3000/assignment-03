@@ -5,6 +5,7 @@ import java.util.concurrent.*;
 import jssc.SerialPort;
 import jssc.SerialPortEvent;
 import jssc.SerialPortEventListener;
+import jssc.SerialPortException;
 import me.baldo3000.model.api.SerialCommChannel;
 
 /**
@@ -37,8 +38,8 @@ public class SerialCommChannelImpl implements SerialCommChannel, SerialPortEvent
 
             // serialPort.addEventListener(this, SerialPort.MASK_RXCHAR);
             serialPort.addEventListener(this);
-        } catch (Exception ex) {
-            ex.printStackTrace();
+        } catch (final SerialPortException e) {
+            System.err.println("Serial port " + port + " not found, skipping connection");
         }
     }
 
@@ -115,5 +116,10 @@ public class SerialCommChannelImpl implements SerialCommChannel, SerialPortEvent
                 System.out.println("Error in receiving string from COM-port: " + ex);
             }
         }
+    }
+
+    @Override
+    public boolean isOpen() {
+        return this.serialPort.isOpened();
     }
 }
