@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", function () {
-
     const ctx = document.getElementById("dataChart").getContext("2d");
     const dataChart = new Chart(ctx, {
         type: 'line',
@@ -8,28 +7,56 @@ document.addEventListener("DOMContentLoaded", function () {
             datasets: [{
                 label: 'Temperature',
                 data: [],
-                borderColor: 'rgba(75, 192, 192, 1)',
+                borderColor: 'rgba(75, 192, 192, 1)', // Default color (will be overridden per segment)
                 borderWidth: 1,
+                segment: {
+                    borderColor: function (ctx) {
+                        if (!ctx.p1) return 'rgba(75, 192, 192, 1)'; // Default color
+
+                        const nextValue = ctx.p1.raw; // The point this segment leads to
+                        if (nextValue >= 25) {
+                            return 'rgba(255, 0, 0, 1)';
+                        } else if (nextValue >= 20) {
+                            return 'rgba(255, 127, 0, 1)';
+                        } else {
+                            return 'rgba(75, 192, 192, 1)';
+                        }
+                    }
+                },
+                pointBackgroundColor: function (context) {
+                    const value = context.raw;
+                    if (value >= 25) return 'rgba(255, 0, 0, 1)';
+                    else if (value >= 20) return 'rgba(255, 127, 0, 1)';
+                    else return 'rgba(75, 192, 192, 1)';
+                },
+                pointBorderColor: function (context) {
+                    const value = context.raw;
+                    if (value >= 25) return 'rgba(255, 0, 0, 1)';
+                    else if (value >= 20) return 'rgba(255, 127, 0, 1)';
+                    else return 'rgba(75, 192, 192, 1)';
+                },
                 fill: false
             }]
         },
         options: {
+            animation: {
+                x: {duration: 1000},
+                y: {duration: 0}      // Disable animation along the y-axis
+            },
             scales: {
-                xAxes: [{
-                    scaleLabel: {
+                x: {
+                    title: {
                         display: true,
-                        labelString: 'Time'
+                        text: 'Time'
                     }
-                }],
-                yAxes: [{
-                    ticks: {
-                        beginAtZero: true
-                    },
-                    scaleLabel: {
+                },
+                y: {
+                    beginAtZero: true,
+                    title: {
                         display: true,
-                        labelString: 'Temperature (°C)'
+                        text: 'Temperature (°C)'
                     }
-                }]
+                }
             }
         }
     });
@@ -39,19 +66,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Define a callback function
     xhttp.onload = function (ev) {
-        const url = xhttp.responseURL;
         const values = JSON.parse(this.response).reverse();
         const [firstValue, ...restValues] = values;
         const labels = [];
         const data = [];
         for (const value of restValues) {
-            const aperture = document.createElement("li");
-            aperture.innerHTML = value["aperture"];
-            const temperature = document.createElement("li");
-            temperature.innerHTML = value["temperature"]
-            const time = document.createElement("li");
-            time.innerHTML = value["time"]
-
             labels.push(new Date(value["time"]).toLocaleTimeString());
             data.push(value["temperature"]);
         }
