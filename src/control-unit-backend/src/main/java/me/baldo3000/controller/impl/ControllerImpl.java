@@ -46,9 +46,9 @@ public class ControllerImpl implements Controller {
                             this.latestReportedTemperature = temperature;
                             this.windowAperture = temperatureToWindowAperture(this.latestReportedTemperature);
                             // Send over serial only if changed to avoid congestions
-                            sendSerial();
+                            sendStatsSerial();
                         }
-                        sendHTTP();
+                        sendStatsHTTP();
                     } catch (final NumberFormatException ignored) {
                     }
                 } else if (prefix.equals("df:")) {
@@ -121,7 +121,9 @@ public class ControllerImpl implements Controller {
 
     @Override
     public void terminate() {
-
+        this.channel.close();
+        this.vertx.close();
+        System.exit(0);
     }
 
     @Override
@@ -129,6 +131,7 @@ public class ControllerImpl implements Controller {
         this.state = state;
         this.stateTimestamp = System.currentTimeMillis();
         this.justEntered = true;
+        sendStateHTTP(state);
     }
 
     @Override
@@ -144,20 +147,31 @@ public class ControllerImpl implements Controller {
         return false;
     }
 
-    private void sendSerial() {
+    private void sendStatsSerial() {
         this.channel.sendMsg(this.windowAperture + ";" + this.latestReportedTemperature);
     }
 
-    private void sendHTTP() {
+    private void sendStatsHTTP() {
         final JsonObject obj = new JsonObject();
         obj.put("aperture", this.windowAperture);
         obj.put("temperature", this.latestReportedTemperature);
         obj.put("time", System.currentTimeMillis());
         this.webClient
-                .post(8080, "127.0.0.1", "/api/data")
+                .post(8080, "127.0.0.1", "/api/stats")
                 .sendJsonObject(obj)
                 .onSuccess(response -> {
-                    // System.out.println("Posting - Received response with status code: " + response.statusCode());
+                    // System.out.println("Posting stats - Received response with status code: " + response.statusCode());
+                });
+    }
+
+    private void sendStateHTTP(final State state) {
+        final JsonObject obj = new JsonObject();
+        obj.put("state", this.state.toString());
+        this.webClient
+                .post(8080, "127.0.0.1", "/api/state")
+                .sendJsonObject(obj)
+                .onSuccess(response -> {
+                    // System.out.println("Posting state - Received response with status code: " + response.statusCode());
                 });
     }
 

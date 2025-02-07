@@ -33,4 +33,8 @@ public interface SerialCommChannel {
      */
     boolean isMsgAvailable();
 
+    /**
+     * Close the channel.
+     */
+    void close();
 }
