@@ -105,7 +105,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     document.getElementById("resetAlarm").addEventListener("click", function () {
         const xhttp = new XMLHttpRequest();
-        xhttp.open("POST", "/api/alarm", true);
+        xhttp.open("POST", "/api/commands", true);
         xhttp.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
         xhttp.onload = function () {
             if (xhttp.status === 200) {
@@ -115,5 +115,48 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         };
         xhttp.send(JSON.stringify({reset: true}));
+    });
+
+    document.getElementById("manualMode").addEventListener("click", function () {
+        const xhttp = new XMLHttpRequest();
+        xhttp.open("POST", "/api/commands", true);
+        xhttp.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
+        xhttp.onload = function () {
+            if (xhttp.status === 200) {
+                console.log("Manual mode signal sent successfully");
+            } else {
+                console.error("Failed to send manual mode signal");
+            }
+        };
+        xhttp.send(JSON.stringify({mode: "manual"}));
+    });
+
+    document.getElementById("automaticMode").addEventListener("click", function () {
+        const xhttp = new XMLHttpRequest();
+        xhttp.open("POST", "/api/commands", true);
+        xhttp.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
+        xhttp.onload = function () {
+            if (xhttp.status === 200) {
+                console.log("Automatic mode signal sent successfully");
+            } else {
+                console.error("Failed to send automatic mode signal");
+            }
+        };
+        xhttp.send(JSON.stringify({mode: "automatic"}));
+    });
+
+    document.getElementById("overrideButton").addEventListener("click", function () {
+        const xhttp = new XMLHttpRequest();
+        xhttp.open("POST", "/api/commands", true);
+        xhttp.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
+        xhttp.onload = function () {
+            if (xhttp.status === 200) {
+                console.log("Override value sent successfully");
+            } else {
+                console.error("Failed to send override value");
+            }
+        };
+        const value = document.getElementById("manualOverride").value;
+        xhttp.send(JSON.stringify({aperture: value}));
     });
 });

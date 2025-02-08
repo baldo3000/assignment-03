@@ -9,6 +9,10 @@ public interface Controller {
     static final long NORMAL_SAMPLE_INTERVAL = 3000;
     static final long HOT_SAMPLE_INTERVAL = 1500;
 
+    enum Mode {
+        AUTOMATIC, MANUAL
+    }
+
     enum State {
         NORMAL, HOT, TOO_HOT, ALARM
     }

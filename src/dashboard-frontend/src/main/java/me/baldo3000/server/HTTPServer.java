@@ -55,7 +55,7 @@ public class HTTPServer extends AbstractVerticle {
         final Router router = Router.router(vertx);
         router.route().handler(StaticHandler.create().setCachingEnabled(true));
         router.route().handler(BodyHandler.create());
-        router.route(HttpMethod.POST, "/api/alarm").handler(this::handleAlarmNotification);
+        router.route(HttpMethod.POST, "/api/commands").handler(this::handleDashboardCommands);
         router.route(HttpMethod.GET, "/api/data").handler(this::handleGetData);
 
         vertx.createHttpServer()
@@ -65,21 +65,52 @@ public class HTTPServer extends AbstractVerticle {
                 .onSuccess(server -> System.out.println("HTTP server started on port " + server.actualPort()));
     }
 
-    private void handleAlarmNotification(final RoutingContext routingContext) {
+    private void handleDashboardCommands(final RoutingContext routingContext) {
         final JsonObject body = routingContext.body().asJsonObject();
-        if (body == null || !body.containsKey("reset")) {
-            routingContext.response().setStatusCode(400).end();
-            return;
-        }
-
-        final boolean reset = body.getBoolean("reset");
-        if (reset) {
-            this.webSockets.forEach(ws -> {
-                if (!ws.isClosed()) {
-                    ws.writeTextMessage("df:reset");
+        // System.out.println("From dashboard: " + body);
+        if (body != null) {
+            // Reset signal
+            if (body.containsKey("reset")) {
+                try {
+                    final boolean reset = body.getBoolean("reset");
+                    if (reset) {
+                        sendToWebSockets(routingContext, "df:reset");
+                        return;
+                    }
+                } catch (final ClassCastException ignored) {
                 }
-            });
+            }
+            // Mode signal
+            else if (body.containsKey("mode")) {
+                final String mode = body.getString("mode");
+                if (mode.equals("automatic") || mode.equals("manual")) {
+                    sendToWebSockets(routingContext, "df:" + mode);
+                    return;
+                }
+            }
+            // Aperture override
+            else if (body.containsKey("aperture")) {
+                try {
+                    final int aperture = (int) Double.parseDouble(body.getString("aperture"));
+                    if (aperture >= 0 && aperture <= 100) {
+                        sendToWebSockets(routingContext, "df:" + aperture);
+                        return;
+                    }
+                } catch (final NumberFormatException ignored) {
+                    System.out.println("Could not parse integer: " + body);
+                }
+            }
         }
+        routingContext.response().setStatusCode(400).end();
+    }
+
+    private void sendToWebSockets(final RoutingContext routingContext, String msg) {
+        // System.out.println("Sending: " + msg);
+        this.webSockets.forEach(ws -> {
+            if (!ws.isClosed()) {
+                ws.writeTextMessage(msg);
+            }
+        });
         routingContext.response().setStatusCode(200).end();
     }
 

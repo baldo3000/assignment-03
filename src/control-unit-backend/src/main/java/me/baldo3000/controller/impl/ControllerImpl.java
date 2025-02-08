@@ -15,6 +15,7 @@ public class ControllerImpl implements Controller {
     private final SerialCommChannel channel;
     private final HTTPClient httpClient;
 
+    private Mode mode;
     private State state;
     private long stateTimestamp;
     private boolean justEntered;
@@ -30,6 +31,7 @@ public class ControllerImpl implements Controller {
         this.latestReportedTemperature = 0.0;
         this.resetSignal = false;
         this.windowAperture = 0;
+        this.mode = Mode.AUTOMATIC;
     }
 
     @Override
@@ -129,7 +131,9 @@ public class ControllerImpl implements Controller {
                         final double temperature = Double.parseDouble(payload.substring(3));
                         if (temperature != this.latestReportedTemperature) {
                             this.latestReportedTemperature = temperature;
-                            this.windowAperture = temperatureToWindowAperture(this.latestReportedTemperature);
+                            if (this.mode.equals(Mode.AUTOMATIC)) {
+                                this.windowAperture = temperatureToWindowAperture(this.latestReportedTemperature);
+                            }
                             // Send over serial only if changed to avoid congestions
                             sendStatsSerial();
                         }
@@ -140,9 +144,20 @@ public class ControllerImpl implements Controller {
             }
         });
         this.vertx.eventBus().consumer(HTTPClient.INCOMING_ADDRESS, message -> {
-            if (this.state.equals(State.ALARM) && message.body().toString().equals("df:reset")) {
-                System.out.println("Reset signal received");
+            // System.out.println("Message received from frontend: " + message.body());
+            final String content = message.body().toString();
+            if (content.equals("df:reset") && this.state.equals(State.ALARM)) {
                 this.resetSignal = true;
+                System.out.println("reset");
+            } else if (content.equals("df:automatic")) {
+                this.mode = Mode.AUTOMATIC;
+                System.out.println("automatic");
+            } else if (content.equals("df:manual")) {
+                this.mode = Mode.MANUAL;
+                System.out.println("manual");
+            } else if (content.startsWith("df:") && this.mode.equals(Mode.MANUAL)) {
+                this.windowAperture = (int) Double.parseDouble(content.substring(3));
+                System.out.println("override: " + this.windowAperture);
             }
         });
     }
