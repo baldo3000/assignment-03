@@ -50,7 +50,7 @@ public class SerialCommChannelImpl implements SerialCommChannel, SerialPortEvent
         for (int i = 0; i < array.length; i++) {
             bytes[i] = (byte) array[i];
         }
-        System.out.println("Sending over serial: " + msg);
+        // System.out.println("Sending over serial: " + msg);
         try {
             synchronized (serialPort) {
                 serialPort.writeBytes(bytes);

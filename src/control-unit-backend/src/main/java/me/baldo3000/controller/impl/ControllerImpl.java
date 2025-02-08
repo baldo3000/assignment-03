@@ -1,19 +1,19 @@
 package me.baldo3000.controller.impl;
 
 import io.vertx.core.Vertx;
-import io.vertx.core.http.ClientWebSocket;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.client.WebClient;
 import me.baldo3000.controller.api.Controller;
 import me.baldo3000.model.api.SerialCommChannel;
+import me.baldo3000.model.impl.HTTPClient;
 import me.baldo3000.model.impl.MQTTAgent;
+import me.baldo3000.model.impl.SerialCommChannelImpl;
 
 public class ControllerImpl implements Controller {
 
     private final Vertx vertx;
     private final MQTTAgent mqttAgent;
     private final SerialCommChannel channel;
-    private final ClientWebSocket webSocket;
+    private final HTTPClient httpClient;
 
     private State state;
     private long stateTimestamp;
@@ -22,22 +22,28 @@ public class ControllerImpl implements Controller {
     private boolean resetSignal;
     private int windowAperture;
 
-    public ControllerImpl(final Vertx vertx, final MQTTAgent mqttAgent, final SerialCommChannel channel) {
-        this.vertx = vertx;
-        this.mqttAgent = mqttAgent;
-        this.channel = channel;
+    public ControllerImpl() throws Exception {
+        this.vertx = Vertx.vertx();
+        this.channel = new SerialCommChannelImpl();
+        this.mqttAgent = new MQTTAgent();
+        this.httpClient = new HTTPClient();
         this.latestReportedTemperature = 0.0;
         this.resetSignal = false;
         this.windowAperture = 0;
-        this.webSocket = this.vertx.createWebSocketClient().webSocket();
     }
 
     @Override
     public void initialize() {
         this.vertx.deployVerticle(this.mqttAgent);
+        this.vertx.deployVerticle(this.httpClient);
+        initializeConsumers();
+        setState(State.NORMAL);
+    }
+
+    private void initializeConsumers() {
         this.vertx.eventBus().consumer(MQTTAgent.INCOMING_ADDRESS, message -> {
             final String payload = message.body().toString();
-            System.out.println("Received message from MQTT: " + payload);
+            // System.out.println("Received message from MQTT: " + payload);
             if (payload.length() >= 3) {
                 final String prefix = payload.substring(0, 3);
                 if (prefix.equals("ts:")) {
@@ -55,23 +61,16 @@ public class ControllerImpl implements Controller {
                 }
             }
         });
-        this.webSocket.textMessageHandler(msg -> {
-                    // System.out.println("Received message from server: " + msg);
-                    if (this.state.equals(State.ALARM) && msg.equals("df:reset")) {
-                        System.out.println("Reset signal received");
-                        this.resetSignal = true;
-                    }
-                })
-                .connect(8080, "127.0.0.1", "/ws").onComplete(res -> {
-                    if (res.succeeded()) {
-                        System.out.println("Websocket connected to server!");
-                    }
-                });
-        setState(State.NORMAL);
+        this.vertx.eventBus().consumer(HTTPClient.INCOMING_ADDRESS, message -> {
+            if (this.state.equals(State.ALARM) && message.body().toString().equals("df:reset")) {
+                System.out.println("Reset signal received");
+                this.resetSignal = true;
+            }
+        });
     }
 
     @Override
-    public void mainLoop() {
+    public void mainLoop() throws InterruptedException {
         while (true) {
             switch (this.state) {
                 case NORMAL -> {
@@ -119,11 +118,7 @@ public class ControllerImpl implements Controller {
             }
 
             // Wait a bit
-            try {
-                Thread.sleep(100); // Add a small delay TODO: remove
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
+            Thread.sleep(100); // Add a small delay TODO: remove
         }
     }
 
@@ -166,8 +161,7 @@ public class ControllerImpl implements Controller {
         obj.put("aperture", this.windowAperture);
         obj.put("temperature", this.latestReportedTemperature);
         obj.put("time", System.currentTimeMillis());
-        this.webSocket.writeTextMessage(obj.encode())
-                .onFailure(response -> System.out.println("Could send stats, error: " + response.getMessage()));
+        this.vertx.eventBus().send(HTTPClient.OUTGOING_ADDRESS, obj.encode());
     }
 
     private int temperatureToWindowAperture(final double temperature) {

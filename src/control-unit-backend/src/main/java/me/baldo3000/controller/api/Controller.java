@@ -21,7 +21,7 @@ public interface Controller {
     /**
      * Start the main loop of the application.
      */
-    void mainLoop();
+    void mainLoop() throws InterruptedException;
 
     /**
      * Terminate application.
