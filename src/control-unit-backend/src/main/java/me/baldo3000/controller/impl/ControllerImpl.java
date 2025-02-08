@@ -40,35 +40,6 @@ public class ControllerImpl implements Controller {
         setState(State.NORMAL);
     }
 
-    private void initializeConsumers() {
-        this.vertx.eventBus().consumer(MQTTAgent.INCOMING_ADDRESS, message -> {
-            final String payload = message.body().toString();
-            // System.out.println("Received message from MQTT: " + payload);
-            if (payload.length() >= 3) {
-                final String prefix = payload.substring(0, 3);
-                if (prefix.equals("ts:")) {
-                    try {
-                        final double temperature = Double.parseDouble(payload.substring(3));
-                        if (temperature != this.latestReportedTemperature) {
-                            this.latestReportedTemperature = temperature;
-                            this.windowAperture = temperatureToWindowAperture(this.latestReportedTemperature);
-                            // Send over serial only if changed to avoid congestions
-                            sendStatsSerial();
-                        }
-                        sendStatsHTTP();
-                    } catch (final NumberFormatException ignored) {
-                    }
-                }
-            }
-        });
-        this.vertx.eventBus().consumer(HTTPClient.INCOMING_ADDRESS, message -> {
-            if (this.state.equals(State.ALARM) && message.body().toString().equals("df:reset")) {
-                System.out.println("Reset signal received");
-                this.resetSignal = true;
-            }
-        });
-    }
-
     @Override
     public void mainLoop() throws InterruptedException {
         while (true) {
@@ -110,7 +81,13 @@ public class ControllerImpl implements Controller {
                     }
                     if (this.resetSignal) {
                         this.resetSignal = false;
-                        setState(State.NORMAL);
+                        if (this.latestReportedTemperature >= TOO_HOT_THRESHOLD) {
+                            setState(State.TOO_HOT);
+                        } else if (this.latestReportedTemperature >= HOT_THRESHOLD) {
+                            setState(State.HOT);
+                        } else {
+                            setState(State.NORMAL);
+                        }
                     }
                 }
                 default -> {
@@ -141,6 +118,35 @@ public class ControllerImpl implements Controller {
         return this.state;
     }
 
+    private void initializeConsumers() {
+        this.vertx.eventBus().consumer(MQTTAgent.INCOMING_ADDRESS, message -> {
+            final String payload = message.body().toString();
+            // System.out.println("Received message from MQTT: " + payload);
+            if (payload.length() >= 3) {
+                final String prefix = payload.substring(0, 3);
+                if (prefix.equals("ts:")) {
+                    try {
+                        final double temperature = Double.parseDouble(payload.substring(3));
+                        if (temperature != this.latestReportedTemperature) {
+                            this.latestReportedTemperature = temperature;
+                            this.windowAperture = temperatureToWindowAperture(this.latestReportedTemperature);
+                            // Send over serial only if changed to avoid congestions
+                            sendStatsSerial();
+                        }
+                        sendStatsHTTP();
+                    } catch (final NumberFormatException ignored) {
+                    }
+                }
+            }
+        });
+        this.vertx.eventBus().consumer(HTTPClient.INCOMING_ADDRESS, message -> {
+            if (this.state.equals(State.ALARM) && message.body().toString().equals("df:reset")) {
+                System.out.println("Reset signal received");
+                this.resetSignal = true;
+            }
+        });
+    }
+
     private boolean doOnce() {
         if (this.justEntered) {
             this.justEntered = false;
@@ -167,7 +173,7 @@ public class ControllerImpl implements Controller {
     private int temperatureToWindowAperture(final double temperature) {
         if (temperature < HOT_THRESHOLD) {
             return 0;
-        } else if (temperature > TOO_HOT_THRESHOLD) {
+        } else if (temperature > TOO_HOT_THRESHOLD || this.state.equals(State.ALARM)) {
             return 100;
         } else {
             return (int) ((temperature - HOT_THRESHOLD) / (TOO_HOT_THRESHOLD - HOT_THRESHOLD) * 100);
