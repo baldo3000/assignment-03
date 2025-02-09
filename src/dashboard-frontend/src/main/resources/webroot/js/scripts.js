@@ -94,13 +94,13 @@ document.addEventListener("DOMContentLoaded", function () {
             dataChart.update();
 
             // Update statistics
-            document.getElementById("state").innerText = "State: " + stats["state"];
-            document.getElementById("mode").innerText = "Mode: " + stats["mode"];
-            document.getElementById("aperture").innerText = "Aperture: " + stats["aperture"];
-            document.getElementById("temperature").innerText = "Temperature: " + stats["temperature"];
-            document.getElementById("minTemperature").innerText = "Min temperature: " + stats["minTemperature"];
-            document.getElementById("maxTemperature").innerText = "Max temperature: " + stats["maxTemperature"];
-            document.getElementById("averageTemperature").innerText = "Average temperature: " + stats["averageTemperature"].toFixed(2);
+            document.getElementById("state").innerText = "State: " + stats["state"].toLowerCase();
+            document.getElementById("mode").innerText = "Mode: " + stats["mode"].toLowerCase();
+            document.getElementById("aperture").innerText = "Aperture: " + stats["aperture"] + "%";
+            document.getElementById("temperature").innerText = "Temperature: " + stats["temperature"] + "°C";
+            document.getElementById("minTemperature").innerText = "Min temperature: " + stats["minTemperature"] + "°C";
+            document.getElementById("maxTemperature").innerText = "Max temperature: " + stats["maxTemperature"] + "°C";
+            document.getElementById("averageTemperature").innerText = "Average temperature: " + stats["averageTemperature"].toFixed(2) + "°C";
 
             updateButtonStates(stats["state"], stats["mode"]);
         }
