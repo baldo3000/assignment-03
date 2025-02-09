@@ -1,6 +1,7 @@
 package me.baldo3000.model.impl;
 
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.http.WebSocket;
 import io.vertx.core.http.WebSocketClient;
 
@@ -21,15 +22,17 @@ public class HTTPClient extends AbstractVerticle {
         client.connect(8080, "127.0.0.1", "/ws")
                 .onSuccess(ws -> {
                     System.out.println("Websocket connected to http server!");
+                    final MessageConsumer<String> consumer = this.vertx.eventBus()
+                            .consumer(OUTGOING_ADDRESS, message -> {
+                                sendMessage(ws, message.body());
+                            });
                     ws.textMessageHandler(msg -> {
                         // System.out.println("Received message from server: " + msg);
                         this.vertx.eventBus().send(INCOMING_ADDRESS, msg);
                     }).closeHandler((__) -> {
                         System.out.println("Connection with http server lost, reconnecting in 10 seconds");
+                        consumer.unregister();
                         restart(client, 10);
-                    });
-                    this.vertx.eventBus().consumer(OUTGOING_ADDRESS, message -> {
-                        sendMessage(ws, message.body().toString());
                     });
                 }).onFailure(e -> {
                     System.out.println("Connection with http server failed, retrying in 10 seconds");
@@ -38,13 +41,14 @@ public class HTTPClient extends AbstractVerticle {
     }
 
     private void sendMessage(final WebSocket ws, String msg) {
-        ws.writeTextMessage(msg)
-                .onFailure(response -> System.out.println("Could not send stats, error: " + response.getMessage()));
+        if (!ws.isClosed()) {
+            ws.writeTextMessage(msg)
+                    .onFailure(response -> System.out.println("Could not send stats, error: " + response.getMessage()));
+        }
     }
 
     private void restart(final WebSocketClient client, final int delay) {
         client.close();
-        this.vertx.eventBus().consumer(OUTGOING_ADDRESS).unregister();
         vertx.setTimer(TimeUnit.SECONDS.toMillis(delay), (__) -> {
             startClient();
         });
