@@ -82,6 +82,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             // Update statistics
             document.getElementById("state").innerText = "State: " + stats["state"];
+            document.getElementById("mode").innerText = "Mode: " + stats["mode"];
             document.getElementById("aperture").innerText = "Aperture: " + stats["aperture"];
             document.getElementById("temperature").innerText = "Temperature: " + stats["temperature"];
             document.getElementById("minTemperature").innerText = "Min temperature: " + stats["minTemperature"];

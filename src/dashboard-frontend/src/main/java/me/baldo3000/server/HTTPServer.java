@@ -20,12 +20,17 @@ public class HTTPServer extends AbstractVerticle {
         NORMAL, HOT, TOO_HOT, ALARM
     }
 
+    private enum Mode {
+        AUTOMATIC, MANUAL
+    }
+
     // Records
     private static final int MAX_SIZE = 50;
     private final List<DataValue> values;
 
     // Current state
     private State state;
+    private Mode mode;
     private int aperture;
     private double temperature;
     private double minTemperature;
@@ -38,6 +43,7 @@ public class HTTPServer extends AbstractVerticle {
     public HTTPServer() {
         this.values = new ArrayList<>(MAX_SIZE);
         this.state = State.NORMAL;
+        this.mode = Mode.AUTOMATIC;
         this.aperture = 0;
         this.temperature = 0.0;
         this.minTemperature = 0.0;
@@ -124,7 +130,8 @@ public class HTTPServer extends AbstractVerticle {
             arr.add(obj);
         }
         final JsonObject stats = new JsonObject();
-        stats.put("state", this.state.toString());
+        stats.put("state", this.state);
+        stats.put("mode", this.mode);
         stats.put("aperture", this.aperture);
         stats.put("temperature", this.temperature);
         stats.put("minTemperature", this.minTemperature);
@@ -171,6 +178,11 @@ public class HTTPServer extends AbstractVerticle {
             // Update state
             try {
                 this.state = State.valueOf(jsonObject.getString("state"));
+            } catch (final IllegalArgumentException ignored) {
+            }
+            // Update mode
+            try {
+                this.mode = Mode.valueOf(jsonObject.getString("mode"));
             } catch (final IllegalArgumentException ignored) {
             }
         }

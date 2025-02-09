@@ -178,7 +178,8 @@ public class ControllerImpl implements Controller {
 
     private void sendStatsHTTP() {
         final JsonObject obj = new JsonObject();
-        obj.put("state", this.state.toString());
+        obj.put("state", this.state);
+        obj.put("mode", this.mode);
         obj.put("aperture", this.windowAperture);
         obj.put("temperature", this.latestReportedTemperature);
         obj.put("time", System.currentTimeMillis());
