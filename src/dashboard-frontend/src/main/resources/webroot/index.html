@@ -27,14 +27,18 @@
             <li id="averageTemperature">Average temperature:</li>
         </ul>
         <button id="resetAlarm">Reset alarm</button>
-        <button id="automaticMode">Automatic</button>
+        <button id="automaticMode" hidden>Automatic</button>
         <button id="manualMode">Manual</button>
-        <label for="manualOverride">Aperture:</label>
-        <input id="manualOverride" type="number" min="0" max="100" value="0"/>
-        <button id="overrideButton">Override</button>
+        <span id="override" hidden>
+            <label for="manualOverride">Aperture:</label>
+            <input id="manualOverride" type="number" min="0" max="100" value="0"/>
+            <button id="overrideButton">Override</button>
+        </span>
     </section>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/moment@^2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@^1"></script>
 <script src="js/scripts.js"></script>
 </body>
 </html>

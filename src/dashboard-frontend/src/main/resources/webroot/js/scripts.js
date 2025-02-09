@@ -45,6 +45,7 @@ document.addEventListener("DOMContentLoaded", function () {
             },
             scales: {
                 x: {
+                    type: 'time',
                     title: {
                         display: true,
                         text: 'Time'
@@ -61,6 +62,18 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
+    const resetButton = document.getElementById("resetAlarm");
+    const manualModeButton = document.getElementById("manualMode");
+    const automaticModeButton = document.getElementById("automaticMode");
+    const overrideSection = document.getElementById("override");
+
+    function updateButtonStates(state, mode) {
+        resetButton.disabled = state !== "ALARM";
+        manualModeButton.hidden = mode !== "AUTOMATIC";
+        automaticModeButton.hidden = mode !== "MANUAL";
+        overrideSection.hidden = mode !== "MANUAL";
+    }
+
 
     // Send a request for values
     function getValues() {
@@ -72,7 +85,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const labels = [];
             const data = [];
             for (const value of records) {
-                labels.push(new Date(value["time"]).toLocaleTimeString());
+                labels.push(new Date(value["time"]));
                 data.push(value["temperature"]);
             }
             // Update chart
@@ -89,13 +102,7 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById("maxTemperature").innerText = "Max temperature: " + stats["maxTemperature"];
             document.getElementById("averageTemperature").innerText = "Average temperature: " + stats["averageTemperature"].toFixed(2);
 
-            // Enable/disable reset alarm button
-            // if(stats["state"] === "ALARM"){
-            //     document.getElementById("resetAlarm").removeAttribute("disabled");
-            // } else {
-            //     document.getElementById("resetAlarm").disabled(true);
-            // }
-
+            updateButtonStates(stats["state"], stats["mode"]);
         }
         xhttp.send();
     }
